@@ -1,4 +1,6 @@
-import math
+import numpy as np
+import matplotlib.pyplot as plt
+from thermodynamic_properties.util import percent_difference
 
 
 class CpIdealGas:
@@ -6,10 +8,18 @@ class CpIdealGas:
     Ideal Gas State Fit to Hyperbolic Functions :cite:`DIPPR`
 
     .. math::
-        C_{\\mathrm{p}}^{\\mathrm{IG}} = C_1 + C_2\\left[\\frac{C_3/T}{\\sinh{(C_3/T)}\\right] + C_4 \\left[\\frac{C_5/T}{\\cosh{(C_5/T)}\\right]^2
+        C_{\\mathrm{p}}^{\\mathrm{IG}} = C_1 + C_2\\left[\\frac{C_3/T}{\\sinh{(C_3/T)}}\\right] + C_4 \\left[\\frac{C_5/T}{\\cosh{(C_5/T)}}\\right]^2
         :label: cp_ig
 
+
     where :math:`C_{\\mathrm{p}}^{\\mathrm{IG}}` is in J/kmol/K and :math:`T` is in K.
+
+    Computing integrals of Equation :eq:`cp_ig` is challenging.
+    Instead, the function is fit to a polynomial within a range of interest (:attr:`T_min_fit`, :attr:`T_max_fit`)
+    Then, this polynomial is integrated symbolically using :ref:`sympy` and lambdified into a function
+    that can be called at runtime in an external computational environment by calling
+    :meth:`thermodynamic_properties.cp_ig.CpIdealGas.integrate` (see Equation :eq:`cp_int`)
+
 
     :param dippr_no: dippr_no of compound by DIPPR table, defaults to None
     :type dippr_no: str, optional
@@ -20,9 +30,9 @@ class CpIdealGas:
     :param MW: molecular weight in g/mol
     :type MW: float, derived from input
     :param Tmin: minimum temperature of validity for relationship [K]
-    :type Tmin: float, derived from input
+    :type T_min: float, derived from input
     :param Tmax: maximum temperature of validity [K]
-    :type Tmax: float, derived from input
+    :type T_max: float, derived from input
     :param C1: parameter in Equation :eq:`cp_ig`
     :type C1: float, derived from input
     :param C2: parameter in Equation :eq:`cp_ig`
@@ -38,7 +48,17 @@ class CpIdealGas:
 
     """
 
-    def __init__(self, dippr_no: str = None, compound_name: str = None, cas_number: str = None):
+    def __init__(self, dippr_no: str = None, compound_name: str = None, cas_number: str = None,
+                 T_min_fit: float = None, T_max_fit: float = None, n_points_fit: int = 1000,
+                 poly_order: int=2):
+        """
+        :param n_points_fit: number of points for fitting polynomial and plotting, defaults to 1000
+        :type n_points_fit: int, optional
+        :param poly_order: order of polynomial for fitting,d efaults to 2
+        :type poly_order: int, optional
+        :param T_min_fit: minimum temperature for fitting, defaults to Tmin
+        :param T_max_fit: maximum temperature for fitting, defaults to Tmax
+        """
         from thermodynamic_properties import os, ROOT_DIR
         file = os.path.join(ROOT_DIR, 'cp_ig.csv')
         my_header = [
@@ -63,12 +83,12 @@ class CpIdealGas:
                     # found
                     (self.dippr_no, self.compund_name, self.formula, self.cas_number, self.MW,
                      self._C1em5, self._C2em5, self._C3em3, self._C4e5, self.C5,
-                     self.Tmin, self._Cp_Tmin_em5, self.Tmax, self._Cp_Tmax_em5) = vals
+                     self.T_min, self._Cp_Tmin_em5, self.T_max, self._Cp_Tmax_em5) = vals
 
         assert found_compound, 'No compound was found in table! for {}, {}, {}'.format(self.dippr_no, self.compund_name, self.cas_number)
         self.MW = float(self.MW)
-        self.Tmin = float(self.Tmin)
-        self.Tmax = float(self.Tmax)
+        self.T_min = float(self.T_min)
+        self.T_max = float(self.T_max)
         self.C1 = float(self._C1em5) * 1e5
         self.C2 = float(self._C2em5) * 1e5
         self.C3 = float(self._C3em3) * 1e3
@@ -77,34 +97,74 @@ class CpIdealGas:
         self.Cp_Tmin = float(self._Cp_Tmin_em5) * 1e5
         self.Cp_Tmax = float(self._Cp_Tmax_em5) * 1e5
 
-        # if verbose:
-        #     print('Setting heat capacity constants for %s (taken from Perrys):' % compound_name)
-        #     for key, val in self.constants.items():
-        #         print('            %s:' % key, val)
-        #     print('             value at 300K [J/kmol/K]=', self.eval(300.))
+        if T_min_fit is None:
+            T_min_fit = self.T_min
+        if T_max_fit is None:
+            T_max_fit = self.T_max
 
-    def eval(self, T):
+        self.T_fit = np.linspace(T_min_fit, T_max_fit, n_points_fit)
+        self.T_min_fit = T_min_fit
+        self.T_max_fit = T_max_fit
+
+        assert self.T_min <= T_min_fit < self.T_max, 'Minimum temp not in correct range'
+        assert self.T_min < T_max_fit <= self.T_max, 'Minimum temp for fitting too low!'
+
+        self.Cp_poly = np.poly1d(
+            np.polyfit(self.T_fit, self.eval(self.T_fit), poly_order)
+        )
+        self.anti_derivative = np.polyint(self.Cp_poly)
+
+        if self.get_numerical_percent_difference() > 0.001:
+            self.plot()
+            plt.show()
+            raise Exception('Error in integration is too large!')
+
+    def eval(self, T, f_sinh=np.sinh, f_cosh=np.cosh):
         """
 
-        .. math::
-            C_{\\mathrm{p}}^{\\mathrm{IG}} = C_1 + C_2\\left[\\frac{C_3/T}{\\sinh{(C_3/T)}\\right] + C_4 \\left[\\frac{C_5/T}{\\cosh{(C_5/T)}\\right]^2
-            :label: cp_ig
-
         :param T: temperature in K
-        :return: :math:`C_{\\mathrm{p}}^{\\mathrm{IG}}` J/kmol/K
+        :param f_sinh: function for hyperbolic sine, defaults to :ref:`np.sinh`
+        :type f_sinh: callable
+        :param f_cosh: function for hyperbolic cosine, defaults to :ref:`np.cosh`
+        :type f_cosh: callable
+        :return: :math:`C_{\\mathrm{p}}^{\\mathrm{IG}}` J/kmol/K (see equation :eq:`cp_ig`)
         """
         C3_T = self.C3 / T
         C5_T = self.C5 / T
-        return self.C1 + self.C2 * (C3_T/math.sinh(C3_T)) + self.C4 * (C5_T/math.cosh(C5_T))*(C5_T/math.cosh(C5_T))
+        return self.C1 + self.C2 * (C3_T/f_sinh(C3_T)) + self.C4 * (C5_T/f_cosh(C5_T))*(C5_T/f_cosh(C5_T))
 
-    # def integral(self, T):
-    #     return sum(self.constants[i] * pow(T, i) / i for i in range(1, self.num_constants + 1))
-    #
-    # def integral_dT(self, T_ref, T):
-    #     """
-    #     .. math::
-    #
-    #         \\int_{Tref}^T CpL dT
-    #
-    #     """
-    #     return self.integral(T) - self.integral(T_ref)
+    def plot(self, ax=None):
+        if ax is None:
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+        T_all = np.linspace(self.T_min, self.T_max, 1000)
+        vals = self.eval(T_all)
+        approx_vals = self.Cp_poly(self.T_fit)
+        ax.plot(T_all, vals, '-', label='Hyperbolic Functions')
+        ax.plot(self.T_fit, approx_vals, '--', markerfacecolor='None', label='Polynomial')
+        ax.legend()
+        ax.set_xlabel('Temperature [K]')
+        ax.set_ylabel('CpIg [%s]' % self.units)
+
+    def integrate(self, T_a, T_b):
+        """
+        .. math::
+            \\int_{T_a}^{T_b}C_\\mathrm{p}^\\mathrm{IG}(T^') \\mathrm{d}T^'
+            :label: cp_int
+
+        :param T_a: start temperature in K
+        :param T_b: finish temperature in K
+        :return: integral
+        """
+        return self.anti_derivative(T_b) - self.anti_derivative(T_a)
+
+    def numerical_integration(self, T_a, T_b):
+        """Numerical integration using scipy"""
+        import scipy.integrate as si
+        return si.quad(self.eval, T_a, T_b)
+
+    def get_numerical_percent_difference(self):
+        """Calculate the percent difference with numerical integration obtained by :ref:`scipy`"""
+        integral_poly_fit = self.integrate(self.T_min_fit, self.T_max_fit)
+        integral_numerical, err_numerical = self.numerical_integration(self.T_min_fit, self.T_max_fit)
+        return percent_difference(integral_poly_fit, integral_numerical)

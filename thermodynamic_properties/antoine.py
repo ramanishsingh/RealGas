@@ -33,7 +33,7 @@ class AntoineCoefficients:
     def calc_p_sat(self, T):
         # temperature in K
         if T < self.Trange[0] or T > self.Trange[1]:
-            print('Temperature %f is outside range of Tmin = %f to Tmax = %f K'%(T, self.Trange[0], self.Trange[1]))
+            print('Temperature %f is outside range of T_min = %f to T_max = %f K'%(T, self.Trange[0], self.Trange[1]))
         C1, C2, C3, C4, C5 = self.C
         return math.exp(C1 + C2/T + C3*math.log(T) + C4*math.pow(T,C5))
 
