@@ -1,4 +1,6 @@
 from .chem_constants import R_si_units
+import math
+from typing import List
 
 
 class PengRobinsonUnary:
@@ -11,10 +13,12 @@ class PengRobinsonUnary:
     :type w: float
     """
     def __init__(self, **kwargs):
-        self.R = 8.314
+        self.R = R_si_units
         self.T_c = kwargs.pop('T_c')
         self.P_c = kwargs.pop('P_c')
         self.w = kwargs.pop('w')
+        self.b = self.b_rule()
+        self.a = lambda T: self.a_expr(T)
 
     def kappa_rule(self):
         """
@@ -26,75 +30,69 @@ class PengRobinsonUnary:
     def a_expr(self, T):
         """
         .. math::
-            \\left(0.45724\\right)
+            a = \\left(0.45724\\frac{R^2T_c^2}{P_c}\\right)\\left[1 + \\kappa  - \\kappa\\left(\\frac{T}{T_c}\\right)^{1/2}\\right]^2
 
         :param T: temperature [K]
         :return: :math:`a`
         """
 
-        Tic = self.T_i_c[component]
-        Pic = self.P_i_c[component]
-        R = self.R
-        T_reduced = T / Tic
-        ki = self.kappa_i[component]
-        return 0.45724*self.R*self.R*Tic*Tic/Pic*pow(1. + ki - ki*pow(T_reduced, 0.5), 2)
+        ki = self.kappa_rule()
+        return 0.45724*self.R*self.R*self.T_c*self.T_c/self.P_c*pow(
+            1. + ki - ki*pow(T/self.T_c, 0.5), 2
+        )
 
-class PengRobinson:
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def b_rule(self):
+        """
+        .. math::
+            b = 0.07780\\frac{RT_c}{P_c}
 
-    def add_parameters(self, T_i_c=None, P_i_c=None, w_i=None, d_ij=None, **kwargs):
+        :return: :math:`b`
+        """
+        return 0.07780*self.R*self.T_c / self.P_c
+
+
+class PengRobinsonFactory:
+    """
+
+    .. note:: currently neglects the :math:`k_{ij}` mixing parameter
+
+    :param data: Peng Robinson parameter class for each component
+    :type data: dict[:attr:`components`, :ref:`PengRobinsonUnary`]
+    :param components: names of components
+    :type components: list
+    """
+    def __init__(self, components: List[str], args: List[dict]):
         """
 
-        :param T_i_c: Critical temperatures [K]
-        :type T_i_c: dict
-        :param P_i_c: Critical pressures [Pa]
-        :type P_i_c: dict
-        :param w_i: Accentric factor, :math:`\omega_i` [dimensionless]
-        :type w_i: dict
-        :param kwargs: dictionary for other parameters
+        :param components: list of components
+        :param args: args for each component
         """
-        self.name += '_peng_robinson'
-
-        # additional input parameters for PR
-        self.T_i_c = T_i_c
-        self.P_i_c = P_i_c
-        self.w_i = w_i
-        self.d_ij = d_ij
-
-        self.input_parameters += ['T_i_c', 'P_i_c', 'w_i', 'd_ij']
-
-        # additional dimensionless parameters
-        self.kappa_i = {
-            key: 0.37464 + 1.54226*val - 0.26992*val*val for key, val in self.w_i.items()
+        self.R = R_si_units
+        self.unary = {
+            key: PengRobinsonUnary(**val) for key, val in zip(components, args)
         }
-        self.a_i = {
-            key: self.a_i_rule(key) for key in self.components
-        }
-        self.b_i = {
-            key: 0.07780*self.R*self.T_i_c[key]/self.P_i_c[key] for key in self.components
-        }
-        self.dimensionless_parameters += ['kappa_i', 'a_i', 'b_i']
+        self.components = components
+        self._sqrt_2 = self.sqrt(2)
 
-        import math
-        # todo: move this to __init__ method?
-        self._sqrt_2 = math.sqrt(2)
+    def sqrt(self, val):
+        return math.sqrt(val)
 
-    def a_i_rule(self, component):
-
-    def a_ij_expr(self, i, j):
+    def a_ij_expr(self, i, j, T):
         """Mixing rule for :math:`a_{ij}`
 
         .. math::
 
-            a_{ij} = \sqrt{a_ia_j}(1-\\delta_{ij})
+            a_{ij} = \sqrt{a_ia_j}
+
+        .. note::
+            Assumes :math:`k_{ij}=0`
 
         :param i: component name
         :param j: component name
-        :return: mixing rule
-        :rtype: float
+        :param T: temperature [K]
+        :return: :math:`a_{ij}`
         """
-        return pyo.sqrt(self.a_i[i]*self.a_i[j])*(1. - self.d_ij[i, j])
+        return self.sqrt(self.unary[i].a(T)*self.unary[j].a(T))
 
     def a_expr(self, Y_i_k):
         sum = 0.
@@ -175,28 +173,6 @@ class PengRobinson:
                  + Z * (A - 3. * B_squared - 2. * B)
                  - (A * B - B_squared - B * B_squared) == 0.
         )
-
-    def retentate_gas_law_rule(self, *args):
-        if self.on_inlet_retentate_boundary(*args):
-            return self.enforce_P_feed_boundary(*args)
-
-        Y_i_k = self.get_Y_i_r(*args)
-        P = self.P_r_expr(*args)
-        Z = self.Z_r_expr(*args)
-        A = self.A_expr(Y_i_k, P)
-        B = self.B_expr(Y_i_k, P)
-        return self.residual(Z, A, B)
-
-    def permeate_gas_law_rule(self, *args):
-        if self.on_top_permeate_boundary(*args):
-            return self.enforce_P_top_permeate_boundary(*args)
-
-        Y_i_k = self.get_Y_i_p(*args)
-        P = self.P_p_expr(*args)
-        Z = self.Z_p_expr(*args)
-        A = self.A_expr(Y_i_k, P)
-        B = self.B_expr(Y_i_k, P)
-        return self.residual(Z, A, B)
 
 
 class PR_EOS(PengRobinson, Model):
