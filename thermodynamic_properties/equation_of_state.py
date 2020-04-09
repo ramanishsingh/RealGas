@@ -1,4 +1,4 @@
-from .chem_constants import R_si_units
+from thermodynamic_properties.chem_constants import R_si_units
 import math
 from typing import List
 
@@ -57,7 +57,7 @@ class PengRobinsonFactory:
     .. note:: currently neglects the :math:`k_{ij}` mixing parameter
 
     :param data: Peng Robinson parameter class for each component
-    :type data: dict[:attr:`components`, :ref:`PengRobinsonUnary`]
+    :type data: dict[:attr:`components`, :ref:`~PengRobinsonUnary`]
     :param components: names of components
     :type components: list
     """
@@ -87,8 +87,8 @@ class PengRobinsonFactory:
         .. note::
             Assumes :math:`k_{ij}=0`
 
-        :param i: component name
-        :param j: component name
+        :param i: component compound_name
+        :param j: component compound_name
         :param T: temperature [K]
         :return: :math:`a_{ij}`
         """
@@ -175,21 +175,3 @@ class PengRobinsonFactory:
         )
 
 
-class PR_EOS(PengRobinson, Model):
-    def __init__(self, **kwargs):
-        Model.__init__(self, **kwargs)
-
-    def add_parameters(self, T_i_c=None, P_i_c=None, w_i=None, **kwargs):
-        Model.add_parameters(self, **kwargs)
-        PengRobinson.add_parameters(self, T_i_c=T_i_c, P_i_c=P_i_c, w_i=w_i, **kwargs)
-
-    def add_variables(self):
-        self.Z_feed = pyo.Var(initialize=1, doc='compressibility factor')
-
-    def add_equations(self):
-        self.equation_of_state = pyo.Constraint(expr=self.equation_of_state_rule())
-
-    def equation_of_state_rule(self):
-        A = self.A_expr(self.Y_i_feed, self.P_feed)
-        B = self.B_expr(self.Y_i_feed, self.P_feed)
-        return self.residual(self.Z_feed, A, B)

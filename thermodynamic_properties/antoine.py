@@ -1,10 +1,12 @@
-# all pressure units in Pa
-# all temperature units in K
 
 
 class AntoineCoefficients:
     """
     all obtained from Perrys Chemical Engineering Handbook 7th edition
+
+    .. note::
+        all pressures in Pa
+        all temperature in K
     """
     def __init__(self, name):
         self.p_sat = None

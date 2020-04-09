@@ -7,13 +7,13 @@ Welcome to RealGasPSA's documentation!
 ======================================
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 4
    :numbered:
    :caption: Contents:
 
-Equation of State
-=================
 
+   thermodynamic_properties
+   zreferences
 
 
 Indices and tables
