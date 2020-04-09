@@ -1,226 +1,299 @@
 from thermodynamic_properties.chem_constants import R_si_units
-import math
-from typing import List
 from thermodynamic_properties.critial_constants import CriticalConstants
+from thermodynamic_properties.util import percent_difference
+import matplotlib.pyplot as plt
+import numpy as np
 
 
-class PengRobinson(CriticalConstants):
-    """
+class Cubic(CriticalConstants):
+    """Generic Cubic Equation of State
+    Defined as in :cite:`Perry`
 
-    Peng-Robinson Equation of State :cite:`peng-robinson`
+    .. math::
+        P = \\frac{RT}{V - b} - \\frac{a(T)}{V + \\epsilon b)(V + \\sigma b)}
+
+    where :math:`\\epsilon` and :math:`\\sigma` are pure numbers--the same for all substances.
+    :math:`a(T)` and :math:`b` are substance-dependent.
 
     :param R: gas constant, set to SI units
     :type R: float, hard-coded
-    :param a: PR EOS Parameter, set in Equation :eq:`eq_a` from critical properties
-    :type a: callable
-    :param b: PR EOS Parameter, set in Equation :eq:`eq_b` from critical properties
-    :type b: float
+    :param sigma: Parameter defined by specific equation of state, :math:`\\sigma`
+    :type sigma: float
+    :param epsilon: Parameter defined by specific equation of state, :math:`\\epsilon`
+    :type epsilon: float
+    :param Omega: Parameter defined by specific equation of state, :math:`\\Omega`
+    :type Omega: float
+    :param Psi: Parameter defined by specific equation of state, :math:`\\Psi`
+    :type Psi: float
+    :param tol: tolerance for percent difference between compressilibity factor calculated iteratively, set to 0.01
+    :type tol: float
+
     """
+    def __init__(self, sigma: float, epsilon: float, Omega: float, Psi: float,
+                 dippr_no: str = None, compound_name: str = None, cas_number: str = None):
+        CriticalConstants.__init__(self, dippr_no, compound_name, cas_number)
+        self.R = R_si_units
+        self.sigma = sigma
+        self.epsilon = epsilon
+        self.Omega = Omega
+        self.Psi = Psi
+        self.b = self.Omega*self.R*self.T_c/self.P_c
+        self.tol = 0.01
+
+    def get_default_natural_log(self):
+        return np.log
+
+    """Expressions"""
+    def alpha_expr(self, T_r):
+        """An empirical expression, specific to a particular form of the equation of state
+
+        :param T_r: reduced temperature (T/Tc), dimensionless
+        :return: :math:`\\alpha (T_r)`
+        """
+        raise NotImplementedError
+
+    def beta_expr(self, T, P):
+        """
+
+        .. math::
+            \\beta = \\Omega\\frac{P_\\mathrm{r}}{T_\\mathrm{r}}
+
+        :param T:  temperature in K
+        :param P: pressure in Pa
+        :return: :math:`\\beta`
+        """
+        P_r = P/self.P_c
+        T_r = T/self.T_c
+        return self.Omega*P_r/T_r
+
+    def q_expr(self, T):
+        """
+
+        .. math::
+            q = \\frac{\\Psi \\alpha(T_\\mathrm{r})}{\\Omega T_\\mathrm{r}}
+
+        :param T: temperautre in K
+        """
+        T_r = T / self.T_c
+        return self.Psi*self.alpha_expr(T_r)/self.Omega/T_r
+
+    def a_expr(self, T):
+        """
+
+        .. math::
+            a(T) = \\Psi \\frac{\\alpha(T_r)R^2T_{\\mathrm{c}}^2}{P_{\\mathrm{c}}}
+
+        :param T: temperautre in K
+        """
+        return self.Psi*self.alpha_expr(T/self.T_c)*self.R*self.R*self.T_c*self.T_c/self.P_c
+
+    def Z_expr(self, P, V, T):
+        return P*V/self.R/T
+
+    def I_expr(self, P, V, T, log=None):
+        """
+
+        .. math::
+            I = \\frac{1}{\\sigma - \\epsilon}\\ln{\\left(
+                \\frac{Z + \\sigma \\beta}{Z + \\epsilon \\beta}
+            \\right)}
+
+        :param log: function to be used for natural logarithm, defaults to :ref:`np.log`
+        :type log: callable, optional
+        """
+        if log is None:
+            log = self.get_default_natural_log()
+        Z = self.Z_expr(P, V, T)
+        B = self.beta_expr(T, P)
+        return log(
+            (Z + self.sigma*B)/(Z + self.epsilon*B)
+        ) / (self.sigma - self.epsilon)
+
+    def d_ln_alpha_d_ln_Tr(self, T_r):
+        """
+
+        :param T_r: reduced temperature [dimensionless]
+        :return: Expression for :math:`\\frac{\\mathrm{d} \\ln \\alpha(T_\\mathrm{r})}{\\mathrm{d} \\ln T_\\mathrm{r}}`
+        """
+        raise NotImplementedError
+
+    def H_R_RT_expr(self, P, V, T, log=None):
+        """Dimensionless residual enthalpy
+
+        .. math::
+            \\frac{H^\\mathrm{R}}{RT} = Z - 1 + \\left[\\frac{\\mathrm{d} \\ln \\alpha(T_\\mathrm{r})}{\\mathrm{d} \\ln T_\\mathrm{r}} - 1\\right]qI
+
+        :return: Expression for residual enthalpy (divided by RT) -- dimensionless
+        """
+        return self.Z_expr(P, V, T) - 1 + (self.d_ln_alpha_d_ln_Tr(T/self.T_c) - 1)*self.q_expr(T)*self.I_expr(P, V, T, log=log)
+
+    def G_R_RT_expr(self, P, V, T, log=None):
+        """Dimensionless residual gibbs
+
+        .. math::
+            \\frac{G^\\mathrm{R}}{RT} = Z - 1 + \\ln(Z-\\beta) - qI
+
+        :return: Expression for residual gibbs free (divided by RT) -- dimensionless
+        """
+        if log is None:
+            log = self.get_default_natural_log()
+        Z = self.Z_expr(P, V, T)
+        return Z - 1 - log(Z - self.beta_expr(T, P)) - self.q_expr(T)*self.I_expr(P, V, T, log=log)
+
+    def S_R_R_expr(self, P, V, T, log=None):
+        """Dimensionless residual entropy
+
+        .. math::
+            \\frac{S^\\mathrm{R}}{R} = \\ln(Z-\\beta) + \\frac{\\mathrm{d} \\ln \\alpha(T_\\mathrm{r})}{\\mathrm{d} \\ln T_\\mathrm{r}} qI
+
+        :return: Expression for residual entropy (divided by R) -- dimensionless
+        """
+        if log is None:
+            log = self.get_default_natural_log()
+        Z = self.Z_expr(P, V, T)
+        return log(Z - self.beta_expr(T, P)) + self.d_ln_alpha_d_ln_Tr(T/self.T_c)*self.q_expr(T)*self.I_expr(P, V, T, log=log)
+
+    """Solving equations"""
+    def Z_vapor_RHS(self, Z, beta, q):
+        """
+        Compressibility of vapor :cite:`Perry`
+
+        .. math::
+            1 + \\beta - \\frac{q\\beta (Z - \\beta)}{(Z + \\epsilon\\beta)(Z + \\sigma\\beta)}
+            :label: eq_cubic_res_vapor
+
+        :return:
+        """
+        return 1 + beta - q * beta * (Z - beta) / (Z + self.epsilon * beta) / (Z + self.sigma * beta)
+
+    def Z_liquid_RHS(self, Z, beta, q):
+        """
+        Compressibility of vapor :cite:`Perry`
+
+        .. math::
+            \\beta + (Z + \\epsilon\\beta)(Z + \\sigma\\beta)\\left(\\frac{1 + \\beta - Z}{q\\beta}\\right)
+            :label: eq_cubic_res_liquid
+
+        """
+        return beta + (Z + self.epsilon * beta) * (Z + self.sigma * beta) * (1 + beta - Z) / q / beta
+
+    def residual(self, P, V, T):
+        """
+
+        :param P: pressure in Pa
+        :param V: volume in [mol/m**3]
+        :param T: temperature in K
+        :return: residual for cubic equation of state
+        """
+        Z = self.Z_expr(P, V, T)
+        return Z - self.Z_vapor_RHS(Z, self.beta_expr(T, P), self.q_expr(T))
+
+    def iterate_to_solve_Z(self, T, P, phase):
+        """
+
+        :param T: temperature in K
+        :param P: pressure in Pa
+        :param phase: phase [vapor or liquid]
+        :type phase: str
+        :return: compressibility factor
+        """
+        beta = self.beta_expr(T, P)
+        q = self.q_expr(T)
+        if phase == 'liquid':
+            Z_nm1 = beta
+            func = self.Z_liquid_RHS
+        elif phase == 'vapor':
+            Z_nm1 = 1.
+            func = self.Z_vapor_RHS
+        else:
+            raise Exception('Phase {} not found!'.format(phase))
+        Z_n = func(Z_nm1, beta, q)
+        while percent_difference(Z_n, Z_nm1) > self.tol:
+            Z_nm1 = Z_n
+            Z_n = func(Z_nm1, beta, q)
+
+        return Z_n
+
+    def iterate_Z_vapor(self, T, P):
+        return self.iterate_to_solve_Z(T, P, 'vapor')
+
+    def iterate_Z_liquid(self, T, P):
+        return self.iterate_to_solve_Z(T, P, 'liquid')
+
+    def plot_Z_vs_P(self, T, P_min, P_max, phase='vapor', symbol='o', ax=None, **kwargs):
+        """Plot compressibility as a function of pressure
+
+        :param T: temperature [K]
+        :type T: float
+        :param P_min: minimum pressure for plotting [Pa]
+        :type P_min: float
+        :param P_max: maximum pressure for plotting [Pa]
+        :type P_max: float
+        :param phase: phase type (liquid or vapor), defaults to vapor
+        :type phase: str
+        :param symbol: marker symbol, defaults to 'o'
+        :type symbol: str
+        :param ax: matplotlib axes for plotting, defaults to None
+        :type ax: plt.axis
+        :param kwargs: keyword arguments for plotting
+        """
+        if ax is None:
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            ax.set_ylabel('$Z$')
+            ax.set_xlabel('$P$ [MPa]')
+
+        P = np.linspace(P_min, P_max)
+        Z = [self.iterate_to_solve_Z(T, pressure, phase) for pressure in P]
+        ax.plot(P, Z, symbol, markerfacecolor='None', **kwargs)
+
+
+class RedlichKwong(Cubic):
+    """
+        Redlich-Kwong Equation of State :cite:`RK`
+    """
+
     def __init__(self, **kwargs):
-        CriticalConstants.__init__(self, **kwargs)
-        self.R = R_si_units
-        self.b = self.b_rule()
-        self.a = lambda T: self.get_a_expr(T)
+        Cubic.__init__(self, sigma=1, epsilon=0, Omega=0.08664, Psi=0.42748, **kwargs)
 
-    def kappa_rule(self):
-        """
-        .. math::
-            0.37464 + 1.54226\\omega - 0.26992\\omega^2
-            :label: eq_kappa
+    def alpha_expr(self, T_r):
+        return 1/T_r**0.5
+
+    def d_ln_alpha_d_ln_Tr(self, T_r):
+        pass
 
 
-        :return: expression for :math:`\\kappa`
-        """
-        return 0.37464 + 1.54226*self.w - 0.26992*self.w*self.w
+class SoaveRedlichKwong(RedlichKwong):
+    """
+        Soave Redlich-Kwong Equation of State :cite:`SRK`
 
-    def get_a_expr(self, T, my_pow: callable=pow) -> callable:
-        """
-        .. math::
-            a = \\left(0.45724\\frac{R^2T_c^2}{P_c}\\right)\\left[1 + \\kappa  - \\kappa\\left(\\frac{T}{T_c}\\right)^{1/2}\\right]^2
-            :label: eq_a
-
-        where :math:`\\kappa` is calculated in Equation :eq:`eq_kappa`
-
-        .. note::
-            This parameter depends on temperautre
-
-        :param T: temperature [K]
-        :param my_pow: function to perform power :math:`f(x,p) = x^p`, defaults to :py:ref:`pow`
-        :type my_pow: callable
-        """
-        ki = self.kappa_rule()
-        return 0.45724*self.R*self.R*self.T_c*self.T_c/self.P_c*my_pow(
-            1. + ki - ki*my_pow(T/self.T_c, 0.5), 2
-        )
-
-    def b_rule(self):
-        """
-        .. math::
-            b = 0.07780\\frac{RT_c}{P_c}
-            :label: eq_b
-
-        :return: :math:`b`
-        """
-        return 0.07780*self.R*self.T_c / self.P_c
-
-    def residual(self, P, T, V):
-        """Residual for PR-EOS (cubic equation of state)
-
-        .. math::
-            Z^3 - (1-B)Z^2 + (A-3B^2-2B)Z - (AB-B^2-B^3) = 0
-            :label: eq_pr_eos_residual
-
-        where
-
-        .. math::
-            \\begin{align}
-                A &= \\frac{a(T)P}{R^2T^2}\\\\
-                B &= \\frac{bP}{RT} \\\\
-                Z &= \\frac{PV}{RT}
-            \\end{align}
-
-        :param P: pressure [Pa]
-        :param T: temperature [K]
-        :param V: molar volume [m^3/mol]
-
-        """
-        R = self.R
-        A = self.a(T)*P/R/R/T/T
-        B = self.b*P/R/T
-        Z = P*V/R/T
-        Z_squared = Z*Z
-        B_squared = B*B
-
-        return (
-                Z * Z_squared
-                - (1 - B) * Z_squared
-                + Z * (A - 3. * B_squared - 2. * B)
-                - (A * B - B_squared - B * B_squared) == 0.
-        )
-
-
-
-class PengRobinsonFactory:
+    :param f_w: empirical expression used in :math:`\\alpha` [dimensionless?]
+    :type f_w: float, derived
     """
 
-    .. note:: currently neglects the :math:`k_{ij}` mixing parameter
+    def __init__(self, **kwargs):
+        RedlichKwong.__init__(self, **kwargs)
+        self.f_w = 0.480 + 1.574*self.w - 0.176*self.w*self.w
 
-    :param data: Peng Robinson parameter class for each component
-    :type data: dict[:attr:`components`, :py:class:`thermodynamic_properties.equation_of_state.PengRobinson`]
-    :param components: names of components
-    :type components: list
-    """
-    def __init__(self, components: List[str], args: List[dict]):
-        """
+    def alpha_expr(self, T_r):
+        val = 1. + self.f_w*(1 - T_r**0.5)
+        return val*val
 
-        :param components: list of components
-        :param args: args for each component
-        """
-        self.R = R_si_units
-        self.unary = {
-            key: PengRobinson(**val) for key, val in zip(components, args)
-        }
-        self.components = components
-        self._sqrt_2 = self.sqrt(2)
-
-    def sqrt(self, val):
-        return math.sqrt(val)
-
-    def a_ij_expr(self, i, j, T):
-        """Mixing rule for :math:`a_{ij}`
-
-        .. math::
-
-            a_{ij} = \sqrt{a_ia_j}
-
-        .. note::
-            Assumes :math:`k_{ij}=0`
-
-        :param i: component compound_name
-        :param j: component compound_name
-        :param T: temperature [K]
-        :return: :math:`a_{ij}`
-        """
-        return self.sqrt(self.unary[i].a(T)*self.unary[j].a(T))
-
-    def a_expr(self, Y_i_k):
-        sum = 0.
-        for i in Y_i_k.keys():
-            for j in Y_i_k.keys():
-                sum += Y_i_k[i] * Y_i_k[j] * self.a_ij_expr(i, j)
-        return sum
-
-    def b_expr(self, Y_i_k):
-        return sum(
-            self.b_i[key] * val for key, val in Y_i_k.items()
-        )
-
-    def A_expr(self, Y_i_k, P):
-        return self.a_expr(Y_i_k) * P / self.R / self.R / self.T / self.T
-
-    def B_expr(self, Y_i_k, P):
-        return self.b_expr(Y_i_k) * P / self.R / self.T
-
-    def C_k_expr(self, i, Y_i_k, P):
-        """Constant in fugacity coefficient expression
-
-        .. math::
-
-            \\frac{A}{2\\sqrt{2}B}\\left(\\frac{b_i}{b}-\\frac{2\\sum_j Y_{j,k} a_{i,j}}{a}\\right)
-
-        """
-        A = self.A_expr(Y_i_k, P)
-        B = self.B_expr(Y_i_k, P)
-        return A/2./self._sqrt_2/B*(
-            self.b_i[i]/self.b_expr(Y_i_k)
-            - 2.*sum(Y_i_k[j]*self.a_ij_expr(i, j) for j in self.components)/self.a_expr(Y_i_k)
-        )
-
-    def phi_i_k_expr_brute_force(self, i, Z, Y_i_k, P):
-        B = self.B_expr(Y_i_k, P)
-        return pyo.exp(
-            self.b_i[i]/self.b_expr(Y_i_k)*(Z - 1.)
-            - pyo.log(Z - B)
-            + self.C_k_expr(i, Y_i_k, P)*pyo.log(
-                (Z + (1 + self._sqrt_2)*B) / (Z - (self._sqrt_2 - 1)*B)
-            )
-        )
-
-    def phi_i_k_expr(self, i, Z, Y_i_k, P):
-        B = self.B_expr(Y_i_k, P)
-        return pyo.exp(
-            self.b_i[i] / self.b_expr(Y_i_k) * (Z - 1.)
-            + self.C_k_expr(i, Y_i_k, P)*pyo.log(
-                (Z + (1 + self._sqrt_2) * B) / (Z - (self._sqrt_2 - 1) * B)
-            )
-        ) / (Z - B)
-
-    def phi_i_r_expr(self, i, *args):
-        Y_i_k = self.get_Y_i_r(*args)
-        P = self.P_r_expr(*args)
-        Z = self.Z_r_expr(*args)
-        return self.phi_i_k_expr(i, Z, Y_i_k, P)
-
-    def phi_i_p_expr(self, i, *args):
-        Y_i_k = self.get_Y_i_p(*args)
-        P = self.P_p_expr(*args)
-        Z = self.Z_p_expr(*args)
-        return self.phi_i_k_expr(i, Z, Y_i_k, P)
-
-    @staticmethod
-    def residual(Z, A, B):
-        """Peng-Robinson EOS
-
-        Ind. Eng. Chem. Fundam. Vol 15 1976
-        """
-        Z_squared = Z*Z
-        B_squared = B*B
-
+    def d_ln_alpha_d_ln_Tr(self, T_r):
+        T_r_sqrt = T_r**0.5
         return (
-                 Z * Z_squared
-                 - (1 - B) * Z_squared
-                 + Z * (A - 3. * B_squared - 2. * B)
-                 - (A * B - B_squared - B * B_squared) == 0.
+            self.f_w/(self.f_w*(T_r_sqrt - 1) - 1)/T_r
         )
 
 
+class PengRobinson(RedlichKwong):
+    """
+    Peng-Robinson Equation of State :cite:`peng-robinson`
+
+    :param f_w: empirical expression used in :math:`\\alpha` [dimensionless?]
+    :type f_w: float, derived
+    """
+
+    def __init__(self, **kwargs):
+        Cubic.__init__(self, sigma=1 + np.sqrt(2), epsilon=1 - np.sqrt(2), Omega=0.07780, Psi=0.45724, **kwargs)
+        self.f_w = 0.37464 + 1.54226*self.w - 0.26992*self.w*self.w

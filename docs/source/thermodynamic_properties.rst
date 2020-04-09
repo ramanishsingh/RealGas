@@ -38,10 +38,10 @@ thermodynamic\_properties.equation\_of\_state module
 
 .. automodule:: thermodynamic_properties.equation_of_state
 
-.. autoclass:: thermodynamic_properties.equation_of_state.PengRobinson
+.. autoclass:: thermodynamic_properties.equation_of_state.Cubic
     :members:
 
-.. autoclass:: thermodynamic_properties.equation_of_state.PengRobinsonFactory
+.. autoclass:: thermodynamic_properties.equation_of_state.PengRobinson
     :members:
 
 

@@ -28,8 +28,6 @@ class CriticalConstants:
     """
 
     def __init__(self, dippr_no: str = None, compound_name: str = None, cas_number: str = None):
-        """
-        """
         from thermodynamic_properties import os, ROOT_DIR
         file = os.path.join(ROOT_DIR, 'critical_constants.csv')
         my_header = [
@@ -57,6 +55,7 @@ class CriticalConstants:
                     self.P_c = 1e6 * self.P_c
                     self.V_c = self.V_c / 1000.
 
+        assert found_compound, 'No compound was found in table! for {}, {}, {}'.format(self.dippr_no, self.compound_name, self.cas_number)
         assert self.Z_c_percent_difference() < self.tol, 'Critical compressibility inconsistency!'
 
     def calc_Z_c(self):
