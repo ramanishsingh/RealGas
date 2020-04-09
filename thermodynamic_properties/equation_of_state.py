@@ -1,54 +1,103 @@
 from thermodynamic_properties.chem_constants import R_si_units
 import math
 from typing import List
+from thermodynamic_properties.critial_constants import CriticalConstants
 
 
-class PengRobinsonUnary:
+class PengRobinson(CriticalConstants):
     """
-    :param T_c: Critical temperature [K]
-    :type T_c: float
-    :param P_c: Critical pressure [Pa]
-    :type P_c: float
-    :param w: Accentric factor [dimensionless]
-    :type w: float
+
+    Peng-Robinson Equation of State :cite:`peng-robinson`
+
+    :param R: gas constant, set to SI units
+    :type R: float, hard-coded
+    :param a: PR EOS Parameter, set in Equation :eq:`eq_a` from critical properties
+    :type a: callable
+    :param b: PR EOS Parameter, set in Equation :eq:`eq_b` from critical properties
+    :type b: float
     """
     def __init__(self, **kwargs):
+        CriticalConstants.__init__(self, **kwargs)
         self.R = R_si_units
-        self.T_c = kwargs.pop('T_c')
-        self.P_c = kwargs.pop('P_c')
-        self.w = kwargs.pop('w')
         self.b = self.b_rule()
-        self.a = lambda T: self.a_expr(T)
+        self.a = lambda T: self.get_a_expr(T)
 
     def kappa_rule(self):
         """
+        .. math::
+            0.37464 + 1.54226\\omega - 0.26992\\omega^2
+            :label: eq_kappa
+
+
         :return: expression for :math:`\\kappa`
-        :rtype: float
         """
         return 0.37464 + 1.54226*self.w - 0.26992*self.w*self.w
 
-    def a_expr(self, T):
+    def get_a_expr(self, T, my_pow: callable=pow) -> callable:
         """
         .. math::
             a = \\left(0.45724\\frac{R^2T_c^2}{P_c}\\right)\\left[1 + \\kappa  - \\kappa\\left(\\frac{T}{T_c}\\right)^{1/2}\\right]^2
+            :label: eq_a
+
+        where :math:`\\kappa` is calculated in Equation :eq:`eq_kappa`
+
+        .. note::
+            This parameter depends on temperautre
 
         :param T: temperature [K]
-        :return: :math:`a`
+        :param my_pow: function to perform power :math:`f(x,p) = x^p`, defaults to :py:ref:`pow`
+        :type my_pow: callable
         """
-
         ki = self.kappa_rule()
-        return 0.45724*self.R*self.R*self.T_c*self.T_c/self.P_c*pow(
-            1. + ki - ki*pow(T/self.T_c, 0.5), 2
+        return 0.45724*self.R*self.R*self.T_c*self.T_c/self.P_c*my_pow(
+            1. + ki - ki*my_pow(T/self.T_c, 0.5), 2
         )
 
     def b_rule(self):
         """
         .. math::
             b = 0.07780\\frac{RT_c}{P_c}
+            :label: eq_b
 
         :return: :math:`b`
         """
         return 0.07780*self.R*self.T_c / self.P_c
+
+    def residual(self, P, T, V):
+        """Residual for PR-EOS (cubic equation of state)
+
+        .. math::
+            Z^3 - (1-B)Z^2 + (A-3B^2-2B)Z - (AB-B^2-B^3) = 0
+            :label: eq_pr_eos_residual
+
+        where
+
+        .. math::
+            \\begin{align}
+                A &= \\frac{a(T)P}{R^2T^2}\\\\
+                B &= \\frac{bP}{RT} \\\\
+                Z &= \\frac{PV}{RT}
+            \\end{align}
+
+        :param P: pressure [Pa]
+        :param T: temperature [K]
+        :param V: molar volume [m^3/mol]
+
+        """
+        R = self.R
+        A = self.a(T)*P/R/R/T/T
+        B = self.b*P/R/T
+        Z = P*V/R/T
+        Z_squared = Z*Z
+        B_squared = B*B
+
+        return (
+                Z * Z_squared
+                - (1 - B) * Z_squared
+                + Z * (A - 3. * B_squared - 2. * B)
+                - (A * B - B_squared - B * B_squared) == 0.
+        )
+
 
 
 class PengRobinsonFactory:
@@ -57,7 +106,7 @@ class PengRobinsonFactory:
     .. note:: currently neglects the :math:`k_{ij}` mixing parameter
 
     :param data: Peng Robinson parameter class for each component
-    :type data: dict[:attr:`components`, :py:class:`thermodynamic_properties.equation_of_state.PengRobinsonUnary`]
+    :type data: dict[:attr:`components`, :py:class:`thermodynamic_properties.equation_of_state.PengRobinson`]
     :param components: names of components
     :type components: list
     """
@@ -69,7 +118,7 @@ class PengRobinsonFactory:
         """
         self.R = R_si_units
         self.unary = {
-            key: PengRobinsonUnary(**val) for key, val in zip(components, args)
+            key: PengRobinson(**val) for key, val in zip(components, args)
         }
         self.components = components
         self._sqrt_2 = self.sqrt(2)

@@ -38,7 +38,7 @@ thermodynamic\_properties.equation\_of\_state module
 
 .. automodule:: thermodynamic_properties.equation_of_state
 
-.. autoclass:: thermodynamic_properties.equation_of_state.PengRobinsonUnary
+.. autoclass:: thermodynamic_properties.equation_of_state.PengRobinson
     :members:
 
 .. autoclass:: thermodynamic_properties.equation_of_state.PengRobinsonFactory
