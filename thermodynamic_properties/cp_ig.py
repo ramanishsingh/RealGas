@@ -4,7 +4,7 @@ from thermodynamic_properties.util import percent_difference
 
 
 class CpIdealGas:
-    """Heat Capacity :math:`C_{\\mathrm{p}}^{\\mathrm{IG}}` [J/kmol/K] at Constant Pressure of Inorganic and Organic Compounds in the
+    """Heat Capacity :math:`C_{\\mathrm{p}}^{\\mathrm{IG}}` [J/mol/K] at Constant Pressure of Inorganic and Organic Compounds in the
     Ideal Gas State Fit to Hyperbolic Functions :cite:`DIPPR`
 
     .. math::
@@ -12,7 +12,7 @@ class CpIdealGas:
         :label: cp_ig
 
 
-    where :math:`C_{\\mathrm{p}}^{\\mathrm{IG}}` is in J/kmol/K and :math:`T` is in K.
+    where :math:`C_{\\mathrm{p}}^{\\mathrm{IG}}` is in J/mol/K and :math:`T` is in K.
 
     Computing integrals of Equation :eq:`cp_ig` is challenging.
     Instead, the function is fit to a polynomial within a range of interest (:attr:`T_min_fit`, :attr:`T_max_fit`)
@@ -43,12 +43,10 @@ class CpIdealGas:
     :type C4: float, derived from input
     :param C5: parameter in Equation :eq:`cp_ig`
     :type C5: float, derived from input
-    :param units: units for :math:`C_{\\mathrm{p}}^{\\mathrm{IG}}`, set to J/kmol/K
+    :param units: units for :math:`C_{\\mathrm{p}}^{\\mathrm{IG}}`, set to J/mol/K
     :type units: str
 
 
-    .. todo::
-        Is it better to just fit polynomial to numerical integration?
 
     """
 
@@ -75,7 +73,7 @@ class CpIdealGas:
         self.cas_number = cas_number
 
         found_compound = False
-        self.units = 'J/kmol/K'
+        self.units = 'J/mol/K'
         with open(file, 'r') as f:
             header = next(f).rstrip('\n').split(',')
             assert header == my_header, 'Wrong header!'
@@ -93,13 +91,13 @@ class CpIdealGas:
         self.MW = float(self.MW)
         self.T_min = float(self.T_min)
         self.T_max = float(self.T_max)
-        self.C1 = float(self._C1em5) * 1e5
-        self.C2 = float(self._C2em5) * 1e5
+        self.C1 = float(self._C1em5) * 1e2
+        self.C2 = float(self._C2em5) * 1e2
         self.C3 = float(self._C3em3) * 1e3
-        self.C4 = float(self._C4e5) * 1e5
+        self.C4 = float(self._C4e5) * 1e2
         self.C5 = float(self.C5)
-        self.Cp_Tmin = float(self._Cp_Tmin_em5) * 1e5
-        self.Cp_Tmax = float(self._Cp_Tmax_em5) * 1e5
+        self.Cp_Tmin = float(self._Cp_Tmin_em5) * 1e2
+        self.Cp_Tmax = float(self._Cp_Tmax_em5) * 1e2
 
         if T_min_fit is None:
             T_min_fit = self.T_min
@@ -132,7 +130,7 @@ class CpIdealGas:
         :type f_sinh: callable
         :param f_cosh: function for hyperbolic cosine, defaults to :ref:`np.cosh`
         :type f_cosh: callable
-        :return: :math:`C_{\\mathrm{p}}^{\\mathrm{IG}}` J/kmol/K (see equation :eq:`cp_ig`)
+        :return: :math:`C_{\\mathrm{p}}^{\\mathrm{IG}}` J/mol/K (see equation :eq:`cp_ig`)
         """
         C3_T = self.C3 / T
         C5_T = self.C5 / T
