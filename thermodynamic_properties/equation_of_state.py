@@ -57,7 +57,7 @@ class PengRobinsonFactory:
     .. note:: currently neglects the :math:`k_{ij}` mixing parameter
 
     :param data: Peng Robinson parameter class for each component
-    :type data: dict[:attr:`components`, :ref:`~PengRobinsonUnary`]
+    :type data: dict[:attr:`components`, :py:class:`thermodynamic_properties.equation_of_state.PengRobinsonUnary`]
     :param components: names of components
     :type components: list
     """

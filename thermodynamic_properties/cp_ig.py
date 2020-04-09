@@ -46,6 +46,10 @@ class CpIdealGas:
     :param units: units for :math:`C_{\\mathrm{p}}^{\\mathrm{IG}}`, set to J/kmol/K
     :type units: str
 
+
+    .. todo::
+        Is it better to just fit polynomial to numerical integration?
+
     """
 
     def __init__(self, dippr_no: str = None, compound_name: str = None, cas_number: str = None,
@@ -67,7 +71,7 @@ class CpIdealGas:
             'Tmin [K]', 'Cp at Tmin x 1e-5', 'Tmax [K]', 'Cp at Tmax x 1e-5'
         ]
         self.dippr_no = dippr_no
-        self.compund_name = compound_name
+        self.compound_name = compound_name
         self.cas_number = cas_number
 
         found_compound = False
@@ -77,15 +81,15 @@ class CpIdealGas:
             assert header == my_header, 'Wrong header!'
             for line in f:
                 vals = line.rstrip('\n').split(',')
-                if vals[0] == self.dippr_no or vals[1] == self.compund_name or vals[3] == self.cas_number:
+                if vals[0] == self.dippr_no or vals[1] == self.compound_name or vals[3] == self.cas_number:
                     assert not found_compound, 'Input compound found twice in table!'
                     found_compound = True
                     # found
-                    (self.dippr_no, self.compund_name, self.formula, self.cas_number, self.MW,
+                    (self.dippr_no, self.compound_name, self.formula, self.cas_number, self.MW,
                      self._C1em5, self._C2em5, self._C3em3, self._C4e5, self.C5,
                      self.T_min, self._Cp_Tmin_em5, self.T_max, self._Cp_Tmax_em5) = vals
 
-        assert found_compound, 'No compound was found in table! for {}, {}, {}'.format(self.dippr_no, self.compund_name, self.cas_number)
+        assert found_compound, 'No compound was found in table! for {}, {}, {}'.format(self.dippr_no, self.compound_name, self.cas_number)
         self.MW = float(self.MW)
         self.T_min = float(self.T_min)
         self.T_max = float(self.T_max)
@@ -117,7 +121,8 @@ class CpIdealGas:
         if self.get_numerical_percent_difference() > 0.001:
             self.plot()
             plt.show()
-            raise Exception('Error in integration is too large!')
+            raise Exception('Error in integration is too large! Try using a smaller temperature range for fitting '
+                            'and/or increasing the number of fitting points and polynomial degree')
 
     def eval(self, T, f_sinh=np.sinh, f_cosh=np.cosh):
         """
@@ -148,8 +153,9 @@ class CpIdealGas:
 
     def integrate(self, T_a, T_b):
         """
+
         .. math::
-            \\int_{T_a}^{T_b}C_\\mathrm{p}^\\mathrm{IG}(T^') \\mathrm{d}T^'
+            \\int_{T_a}^{T_b}C_{\\mathrm{p}}^{\\mathrm{IG}}(T^\\star) \\mathrm{d}T^\\star
             :label: cp_int
 
         :param T_a: start temperature in K
