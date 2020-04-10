@@ -26,38 +26,38 @@ class SecondVirial(CpIdealGas, CriticalConstants):
         self.pow = pow
 
     def B0_expr(self, T_r):
-        return 0.083 - 0.422/self.pow(T_r, 1.6)
+        return 0.083 - 0.422*self.pow(T_r, -1.6)
 
     def B1_expr(self, T_r):
-        return 0.139 - 0.172/self.pow(T_r, 4.2)
+        return 0.139 - 0.172*self.pow(T_r, -4.2)
 
     def d_B0_d_Tr_expr(self, T_r):
         """
         .. math::
             \\frac{\\mathrm{d} B^0}{\\mathrm{d}T_\\mathrm{r}}
         """
-        return 0.675 / self.pow(T_r, 2.6)
+        return 0.6752 * self.pow(T_r, -2.6)
 
     def d_B1_d_Tr_expr(self, T_r):
         """
         .. math::
             \\frac{\\mathrm{d} B^1}{\\mathrm{d}T_\\mathrm{r}}
         """
-        return 0.722 / self.pow(T_r, 5.2)
+        return 0.7224 * self.pow(T_r, -5.2)
 
     def H_R_RT_expr(self, P, T):
         """Dimensionless residual enthalpy
 
         .. math::
             \\frac{H^\\mathrm{R}}{RT} = P_\\mathrm{r}\\left[
-                B^0 - T_\\mathrm{r}\\frac{\\mathrm{d} B^0}{\\mathrm{d}T_\\mathrm{r}} + \\omega\\left(B^1 - T_r \\frac{\\mathrm{d}B^1}{\\mathrm{d}T_\\mathrm{r}}\\right)
+                \\frac{B^0}{T_\\mathrm{r}} - \\frac{\\mathrm{d} B^0}{\\mathrm{d}T_\\mathrm{r}} + \\omega\\left(\\frac{B^1}{T_\\mathrm{r}} - \\frac{\\mathrm{d}B^1}{\\mathrm{d}T_\\mathrm{r}}\\right)
             \\right]
 
         :return: Expression for residual enthalpy (divided by RT) -- dimensionless
         """
         T_r = T/self.T_c
         return P/self.P_c*(
-                self.B0_expr(T_r) - T_r * self.d_B0_d_Tr_expr(T_r) + self.w * (self.B1_expr(T_r) - T_r * self.d_B1_d_Tr_expr(T_r))
+            self.B0_expr(T_r)/T_r - self.d_B0_d_Tr_expr(T_r) + self.w*(self.B1_expr(T_r)/T_r - self.d_B1_d_Tr_expr(T_r) )
         )
 
     def G_R_RT_expr(self, P, T):
@@ -85,21 +85,6 @@ class SecondVirial(CpIdealGas, CriticalConstants):
         T_r = T / self.T_c
         P_r = P / self.P_c
         return -P_r * (self.d_B0_d_Tr_expr(T_r) + self.w*self.d_B1_d_Tr_expr(T_r))
-
-    def B_expr(self, P, T):
-        """Expression for :math:`B`, where
-
-        .. math::
-            \\frac{BP_\\mathrm{c}}{RT_\\mathrm{c}} = B^0 + \\omega B_1
-
-        so
-        .. math::
-            B = \\left(B^0 + \\omega B^1\\right)RT_\\mathrm{c}/P_\\mathrm{c}
-
-        :return: :math:`B` [m**3/mol]
-        """
-        T_r = T / self.T_c
-        return (self.B0_expr(T_r) + self.w*self.B1_expr(T_r))*self.R*self.T_c/self.P_c
 
     def calc_Z(self, P, T):
         P_r = P/self.P_c
