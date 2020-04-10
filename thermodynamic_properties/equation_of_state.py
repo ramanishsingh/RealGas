@@ -1,11 +1,12 @@
 from thermodynamic_properties.chem_constants import R_si_units
 from thermodynamic_properties.critial_constants import CriticalConstants
 from thermodynamic_properties.util import percent_difference
+from thermodynamic_properties.cp_ig import CpIdealGas
 import matplotlib.pyplot as plt
 import numpy as np
 
 
-class Cubic(CriticalConstants):
+class Cubic(CriticalConstants, CpIdealGas):
     """Generic Cubic Equation of State
     Defined as in :cite:`Perry`
 
@@ -30,8 +31,13 @@ class Cubic(CriticalConstants):
 
     """
     def __init__(self, sigma: float, epsilon: float, Omega: float, Psi: float,
-                 dippr_no: str = None, compound_name: str = None, cas_number: str = None):
+                 dippr_no: str = None, compound_name: str = None, cas_number: str = None, **kwargs):
+        """
+
+        :param kwargs: used in :ref:`CpIdealGas`
+        """
         CriticalConstants.__init__(self, dippr_no, compound_name, cas_number)
+        CpIdealGas.__init__(self, dippr_no, compound_name, cas_number, **kwargs)
         self.R = R_si_units
         self.sigma = sigma
         self.epsilon = epsilon
@@ -153,6 +159,19 @@ class Cubic(CriticalConstants):
         Z = self.Z_expr(P, V, T)
         return log(Z - self.beta_expr(T, P)) + self.d_ln_alpha_d_ln_Tr(T/self.T_c)*self.q_expr(T)*self.I_expr(P, V, T, log=log)
 
+    def H_expr(self, P, V, T, T_ref, val_ref=0., log=None):
+        """Expression for fluid enthalpy
+
+        :param P: pressure in Pa
+        :param V: molar volume [m**3/mol]
+        :param T: temperautre in K
+        :param T_ref: reference temperature in K
+        :param val_ref: value at reference temperature [J/mol/K]
+        :param log: function used for logarithm
+        :return: :math:`H` [J/mol/K]
+        """
+        return val_ref + self.cp_ig_integral(T_ref, T) + self.R*T*self.H_R_RT_expr(P, V, T, log=log)
+
     """Solving equations"""
     def Z_vapor_RHS(self, Z, beta, q):
         """
@@ -241,7 +260,7 @@ class Cubic(CriticalConstants):
             fig = plt.figure()
             ax = fig.add_subplot(111)
             ax.set_ylabel('$Z$')
-            ax.set_xlabel('$P$ [MPa]')
+            ax.set_xlabel('$P$ [Pa]')
 
         P = np.linspace(P_min, P_max)
         Z = [self.iterate_to_solve_Z(T, pressure, phase) for pressure in P]

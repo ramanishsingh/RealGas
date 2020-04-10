@@ -18,7 +18,7 @@ class CpIdealGas:
     Instead, the function is fit to a polynomial within a range of interest (:attr:`T_min_fit`, :attr:`T_max_fit`)
     Then, this polynomial is integrated symbolically using :ref:`sympy` and lambdified into a function
     that can be called at runtime in an external computational environment by calling
-    :meth:`thermodynamic_properties.cp_ig.CpIdealGas.integrate` (see Equation :eq:`cp_int`)
+    :meth:`thermodynamic_properties.cp_ig.CpIdealGas.cp_ig_integral` (see Equation :eq:`cp_int`)
 
 
     :param dippr_no: dippr_no of compound by DIPPR table, defaults to None
@@ -149,7 +149,7 @@ class CpIdealGas:
         ax.set_xlabel('Temperature [K]')
         ax.set_ylabel('CpIg [%s]' % self.units)
 
-    def integrate(self, T_a, T_b):
+    def cp_ig_integral(self, T_a, T_b):
         """
 
         .. math::
@@ -169,6 +169,6 @@ class CpIdealGas:
 
     def get_numerical_percent_difference(self):
         """Calculate the percent difference with numerical integration obtained by :ref:`scipy`"""
-        integral_poly_fit = self.integrate(self.T_min_fit, self.T_max_fit)
+        integral_poly_fit = self.cp_ig_integral(self.T_min_fit, self.T_max_fit)
         integral_numerical, err_numerical = self.numerical_integration(self.T_min_fit, self.T_max_fit)
         return percent_difference(integral_poly_fit, integral_numerical)
