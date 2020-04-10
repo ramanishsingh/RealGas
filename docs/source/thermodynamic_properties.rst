@@ -54,6 +54,10 @@ thermodynamic\_properties.eos module
     :members:
 
 
+.. autoclass:: thermodynamic_properties.eos.virial.BinarySecondVirial
+    :members:
+
+
 Module contents
 ---------------
 

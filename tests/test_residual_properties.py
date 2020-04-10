@@ -29,8 +29,8 @@ class MyTestCase(unittest.TestCase):
 
 
 # def test_residuals(self):
-    #     for i in compounds_to_test:
-    #         I = CriticalConstants(compound_name=i)
+    #     for c1 in compounds_to_test:
+    #         I = CriticalConstants(compound_name=c1)
     #         self.assertLess(I.Z_c_percent_difference(), self.tol)
     #     self.assertEqual(True, False)
 
