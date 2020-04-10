@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.abspath('../../'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'RealGasPSA'
+project = 'SciThermo'
 copyright = '2020, Robert F. DeJaco'
 author = 'Robert F. DeJaco'
 

@@ -1,5 +1,5 @@
 from thermodynamic_properties.chem_constants import R_si_units
-from thermodynamic_properties.critial_constants import CriticalConstants
+from thermodynamic_properties.critical_constants import CriticalConstants
 from thermodynamic_properties.util import percent_difference
 from thermodynamic_properties.cp_ig import CpIdealGas
 import matplotlib.pyplot as plt

@@ -30,7 +30,18 @@ def EOS_roots():
     I.check_roots(250., 300., 1e5, 5e5)
 
 
+def virial_residual():
+    """Can calculate excess properties for mixtures"""
+    from thermodynamic_properties.eos.virial import BinarySecondVirial, SecondVirial
+    T, P = 300., 1e5
+    mixture = BinarySecondVirial(compound_name_i='Water', compound_name_j='Tetrahydrofuran', k_ij=0.)
+    ax = mixture.plot_residual_HSG(P, T)
+    plt.show()
+
+
+
 if __name__ == '__main__':
+    virial_residual()
     # EOS_roots()
-    EOS_demo()
+    # EOS_demo()
     # Cp_ig_demo()

@@ -12,7 +12,10 @@ Welcome to RealGasPSA's documentation!
    :caption: Contents:
 
 
-   thermodynamic_properties
+   heat_capacity
+   critical_properties
+   virial
+   cubic
    zreferences
 
 

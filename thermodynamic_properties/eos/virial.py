@@ -1,8 +1,6 @@
 from thermodynamic_properties.chem_constants import R_si_units
-from thermodynamic_properties.critial_constants import CriticalConstants
-from thermodynamic_properties.util import percent_difference
+from thermodynamic_properties.critical_constants import CriticalConstants
 import numpy as np
-from thermodynamic_properties.cp_ig import CpIdealGas
 import matplotlib.pyplot as plt
 
 
@@ -49,19 +47,22 @@ class Virial:
         return 1 + (self.B0_expr(T_r) + w*self.B1_expr(T_r))*P_r/T_r
 
 
-class SecondVirial(CpIdealGas, CriticalConstants, Virial):
+class SecondVirial(CriticalConstants, Virial):
     """Virial equation of state for one component. See :cite:`Perry,Smith2005`
 
     """
     def __init__(self, dippr_no: str = None, compound_name: str = None, cas_number: str = None,
-                 pow: callable=np.power, **kwargs):
+                 pow: callable=np.power):
         """
 
         :param kwargs: used in :ref:`CpIdealGas`
         """
         CriticalConstants.__init__(self, dippr_no, compound_name, cas_number)
-        CpIdealGas.__init__(self, dippr_no, compound_name, cas_number, **kwargs)
         Virial.__init__(self, pow=pow)
+
+    def d_B_d_Tr(self, T):
+        T_r = T / self.T_c
+        return self.d_B0_d_Tr_expr(T_r) + self.w*self.d_B1_d_Tr_expr(T_r)
 
     def H_R_RT_expr(self, P, T):
         """Dimensionless residual enthalpy
@@ -132,7 +133,7 @@ class SecondVirial(CpIdealGas, CriticalConstants, Virial):
         ax.plot(P, Z, symbol, markerfacecolor='None', **kwargs)
 
 
-class BinarySecondVirial(Virial):
+class BinarySecondVirial(CriticalConstants, Virial):
     r"""Second virial with combining rules from :cite:`Prausnitz1986`
 
     .. math::
@@ -161,10 +162,9 @@ class BinarySecondVirial(Virial):
     def __init__(self,
                  dippr_no_i: str = None, compound_name_i: str = None, cas_number_i: str = None,
                  dippr_no_j: str = None, compound_name_j: str = None, cas_number_j: str = None,
-                 k_ij = 0.,
-                 pow: callable=np.power, **kwargs):
-        self.c1 = SecondVirial(dippr_no=dippr_no_i, compound_name=compound_name_i, cas_number=cas_number_i, pow=pow, **kwargs)
-        self.c2 = SecondVirial(dippr_no=dippr_no_j, compound_name=compound_name_j, cas_number=cas_number_j, pow=pow, **kwargs)
+                 k_ij = 0., pow: callable=np.power):
+        self.c1 = CriticalConstants(dippr_no=dippr_no_i, compound_name=compound_name_i, cas_number=cas_number_i)
+        self.c2 = CriticalConstants(dippr_no=dippr_no_j, compound_name=compound_name_j, cas_number=cas_number_j)
         Virial.__init__(self, pow)
 
         self.k_ij = k_ij
@@ -287,7 +287,7 @@ class BinarySecondVirial(Virial):
                 self.B_ij_expr(cas_i, cas_i, T) - (1.-y_i)*(1.-y_i)*self.d_ij_expr(T)
         )/self.R/T
 
-    def bar_G_i_R_R_T(self, *args):
+    def bar_GiR_RT(self, *args):
         r"""Dimensionless residual partial molar free energy of component :math:`c1`
 
         .. math::
@@ -300,7 +300,7 @@ class BinarySecondVirial(Virial):
     def d_Bij_d_Tr(self, cas_i, cas_j, T):
         w, T_c, P_c = self.get_w_Tc_Pc(cas_i, cas_j)
         T_r = T / T_c
-        return self.d_B0_d_Tr_expr(T_r) + w*self.d_B1_d_Tr_expr(T_r)
+        return self.R*T_c/P_c*(self.d_B0_d_Tr_expr(T_r) + w*self.d_B1_d_Tr_expr(T_r))
 
     def d_dij_d_Tr(self, T):
         r"""
@@ -314,7 +314,7 @@ class BinarySecondVirial(Virial):
                - self.d_Bij_d_Tr(self.c1.cas_number, self.c1.cas_number, T) \
                - self.d_Bij_d_Tr(self.c2.cas_number, self.c2.cas_number, T)
 
-    def bar_H_i_R(self, cas_i, y_i, P, T):
+    def bar_HiR_RT(self, cas_i, y_i, P, T):
         r"""Dimensionless residual partial molar enthalpy of component :math:`c1`
 
         .. math::
@@ -349,9 +349,9 @@ class BinarySecondVirial(Virial):
         :type T: float
         """
         w, T_c, P_c = self.get_w_Tc_Pc(cas_i)
-        return P/self.R/T_c*(self.B_ij_expr(cas_i, cas_i, T) + (1.-y_i)*(1.-y_i)*self.d_dij_d_Tr(T)) + self.ln_hat_phi_i_expr(cas_i, y_i, P, T)
+        return P/self.R/T_c*(self.d_Bij_d_Tr(cas_i, cas_i, T) + (1.-y_i)*(1.-y_i)*self.d_dij_d_Tr(T)) + self.ln_hat_phi_i_expr(cas_i, y_i, P, T)
 
-    def bar_S_i_R(self, cas_i, y_i, P, T):
+    def bar_SiR_R(self, cas_i, y_i, P, T):
         r"""Dimensionless residual partial molar entropy of component :math:`c1`
 
         Since
@@ -389,3 +389,69 @@ class BinarySecondVirial(Virial):
         return P/self.R/T_c*(
             self.d_Bij_d_Tr(cas_i, cas_i, T) + (1.-y_i)*(1.-y_i)*self.d_dij_d_Tr(T)
         )
+
+    def bar_ViR_RT(self, cas_i, y_i, P, T):
+        r""" residual Partial molar volume for component *i*
+
+        .. math::
+            \begin{align}
+                \frac{\bar{V}_i^\mathrm{R}}{RT} &= \left(\frac{\partial \ln\hat{\phi}_i}{\partial P}\right)_{T,y}\\
+                &= \frac{B_{ii} + (1-y_i)^2\delta_{ij}}{RT}
+            \end{align}
+
+        .. note::
+            This expression does not depend on :math:`P`
+
+        :param cas_i: cas number for component of interest
+        :type cas_i: str
+        :param y_i: mole fraction of component of interest
+        :type y_i: float
+        :param P: pressure in Pa
+        :type P: float
+        :param T: temperature in K
+        :type T: float
+        :return: :math:`\bar{V}_i^\mathrm{R}/R/T`
+        """
+        return (self.B_ij_expr(cas_i, cas_i, T) + (1-y_i)*(1-y_i)*self.d_ij_expr(T))/self.R/T
+
+    def X_R_dimensionless(self, method: callable, cas_i: str, y_i: float, P: float, T: float):
+        """Residual property of :math:`X` for mixture.
+
+        :param method: function to compute partial molar property of compound
+        :type method: callable
+        """
+        y_j = 1.-y_i
+        cas_j = self.other_cas[cas_i]
+        return (
+                y_i*method(cas_i, y_i, P, T) + (1.-y_i)*method(cas_j, y_j, P, T)
+        )
+
+    def S_R_R(self, *args):
+        """Residual entropy of mixture :math:`S^\mathrm{R}`"""
+        return self.X_R_dimensionless(self.bar_SiR_R, *args)
+
+    def H_R_RT(self, *args):
+        """Residual enthalpy of mixture :math:`H^\mathrm{R}`"""
+        return self.X_R_dimensionless(self.bar_HiR_RT, *args)
+
+    def G_R_RT(self, *args):
+        """Residual free energy of mixture :math:`G^\mathrm{R}`"""
+        return self.X_R_dimensionless(self.bar_GiR_RT, *args)
+
+    def plot_residual_HSG(self, P, T, ax=None):
+        if ax is None:
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            ax.set_ylabel('Dimensionless')
+            ax.set_xlabel('Gas-Phase Mole fraction %s' % self.c1.compound_name)
+
+        y_1 = np.linspace(0., 1.)
+        HR_RT = np.array(list(self.H_R_RT(self.c1.cas_number, i, P, T) for i in y_1))
+        GR_RT = np.array(list(self.G_R_RT(self.c1.cas_number, i, P, T) for i in y_1))
+        SR_R = np.array(list(self.S_R_R(self.c1.cas_number, i, P, T) for i in y_1))
+        ax.plot(y_1, HR_RT, '-', label='$H^\\mathrm{R}/(RT)$')
+        ax.plot(y_1, GR_RT, '--', label='$G^\\mathrm{R}/(RT)$')
+        ax.plot(y_1, SR_R, '-.', label='$S^\\mathrm{R}/R$')
+        ax.set_title('Residual properties at T = %5.2f K and P = %4.3e Pa' % (T, P))
+        ax.legend()
+        return ax
