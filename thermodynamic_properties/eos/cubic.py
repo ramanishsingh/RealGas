@@ -1,12 +1,11 @@
 from thermodynamic_properties.chem_constants import R_si_units
 from thermodynamic_properties.critical_constants import CriticalConstants
 from thermodynamic_properties.util import percent_difference
-from thermodynamic_properties.cp_ig import CpIdealGas
 import matplotlib.pyplot as plt
 import numpy as np
 
 
-class Cubic(CriticalConstants, CpIdealGas):
+class Cubic(CriticalConstants):
     """Generic Cubic Equation of State
     Defined as in :cite:`Perry`
 
@@ -31,13 +30,8 @@ class Cubic(CriticalConstants, CpIdealGas):
 
     """
     def __init__(self, sigma: float, epsilon: float, Omega: float, Psi: float,
-                 dippr_no: str = None, compound_name: str = None, cas_number: str = None, **kwargs):
-        """
-
-        :param kwargs: used in :ref:`CpIdealGas`
-        """
+                 dippr_no: str = None, compound_name: str = None, cas_number: str = None):
         CriticalConstants.__init__(self, dippr_no, compound_name, cas_number)
-        CpIdealGas.__init__(self, dippr_no, compound_name, cas_number, **kwargs)
         self.R = R_si_units
         self.sigma = sigma
         self.epsilon = epsilon
