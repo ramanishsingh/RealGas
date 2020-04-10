@@ -5,8 +5,8 @@
 
 
 import unittest
-from thermodynamic_properties.cp_ig import CpIdealGas
-from thermodynamic_properties.util import percent_difference
+from scithermo.cp_ig import CpIdealGas
+from scithermo.util import percent_difference
 
 compounds_to_test = ['Butane', 'Carbon dioxide', 'Carbon monoxide',
                      'Propane', 'Propylene', 'Water']

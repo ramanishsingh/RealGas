@@ -1,8 +1,8 @@
 Virial Equation of State
 ========================
 
-.. autoclass:: thermodynamic_properties.eos.virial.SecondVirial
+.. autoclass:: scithermo.eos.virial.SecondVirial
     :members:
 
-.. autoclass:: thermodynamic_properties.eos.virial.BinarySecondVirial
+.. autoclass:: scithermo.eos.virial.BinarySecondVirial
     :members:

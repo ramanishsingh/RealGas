@@ -1,6 +1,6 @@
-from thermodynamic_properties.chem_constants import R_si_units
-from thermodynamic_properties.critical_constants import CriticalConstants
-from thermodynamic_properties.util import percent_difference
+from scithermo.chem_constants import R_si_units
+from scithermo.critical_constants import CriticalConstants
+from scithermo.util import percent_difference
 import matplotlib.pyplot as plt
 import numpy as np
 

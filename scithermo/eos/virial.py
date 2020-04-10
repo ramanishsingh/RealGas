@@ -1,5 +1,5 @@
-from thermodynamic_properties.chem_constants import R_si_units
-from thermodynamic_properties.critical_constants import CriticalConstants
+from scithermo.chem_constants import R_si_units
+from scithermo.critical_constants import CriticalConstants
 import numpy as np
 import matplotlib.pyplot as plt
 

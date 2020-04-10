@@ -28,7 +28,7 @@ class CriticalConstants:
     """
 
     def __init__(self, dippr_no: str = None, compound_name: str = None, cas_number: str = None):
-        from thermodynamic_properties import os, ROOT_DIR
+        from scithermo import os, ROOT_DIR
         file = os.path.join(ROOT_DIR, 'critical_constants.csv')
         my_header = [
             'Cmpd. no.', 'Name', 'Formula', 'CAS no.', 'Mol. wt. [g/mol]',

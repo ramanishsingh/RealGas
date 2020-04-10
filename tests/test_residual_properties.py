@@ -1,7 +1,7 @@
 import unittest
 
-from thermodynamic_properties.eos.cubic import PengRobinson, RedlichKwong, SoaveRedlichKwong
-from thermodynamic_properties.eos.virial import SecondVirial
+from scithermo.eos.cubic import PengRobinson, RedlichKwong, SoaveRedlichKwong
+from scithermo.eos.virial import SecondVirial
 from .test_cp_ig import compounds_to_test
 
 

@@ -1,5 +1,5 @@
 import unittest
-from thermodynamic_properties.critical_constants import CriticalConstants
+from scithermo.critical_constants import CriticalConstants
 
 from tests.test_cp_ig import compounds_to_test
 

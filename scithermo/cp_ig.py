@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from thermodynamic_properties.util import percent_difference
+from scithermo.util import percent_difference
 
 
 class CpIdealGas:
@@ -18,7 +18,7 @@ class CpIdealGas:
     Instead, the function is fit to a polynomial within a range of interest (:attr:`T_min_fit`, :attr:`T_max_fit`)
     Then, this polynomial is integrated symbolically using :ref:`sympy` and lambdified into a function
     that can be called at runtime in an external computational environment by calling
-    :meth:`thermodynamic_properties.cp_ig.CpIdealGas.cp_ig_integral` (see Equation :eq:`cp_int`)
+    :meth:`scithermo.cp_ig.CpIdealGas.cp_ig_integral` (see Equation :eq:`cp_int`)
 
 
     :param dippr_no: dippr_no of compound by DIPPR table, defaults to None
@@ -61,7 +61,7 @@ class CpIdealGas:
         :param T_min_fit: minimum temperature for fitting, defaults to Tmin
         :param T_max_fit: maximum temperature for fitting, defaults to Tmax
         """
-        from thermodynamic_properties import os, ROOT_DIR
+        from scithermo import os, ROOT_DIR
         file = os.path.join(ROOT_DIR, 'cp_ig.csv')
         my_header = [
             'Cmpd. no.', 'Name', 'Formula', 'CAS no.', 'Mol. wt. [g/mol]',

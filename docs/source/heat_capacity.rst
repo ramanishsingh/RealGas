@@ -2,7 +2,7 @@ Heat Capacity
 =============
 
 
-.. automodule:: thermodynamic_properties.cp_ig
+.. automodule:: scithermo.cp_ig
 
-.. autoclass:: thermodynamic_properties.cp_ig.CpIdealGas
+.. autoclass:: scithermo.cp_ig.CpIdealGas
     :members:
