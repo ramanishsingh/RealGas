@@ -11,7 +11,7 @@ class Cubic(CriticalConstants, CpIdealGas):
     Defined as in :cite:`Perry`
 
     .. math::
-        P = \\frac{RT}{V - b} - \\frac{a(T)}{V + \\epsilon b)(V + \\sigma b)}
+        P = \\frac{RT}{V - b} - \\frac{a(T)}{(V + \\epsilon b)(V + \\sigma b)}
 
     where :math:`\\epsilon` and :math:`\\sigma` are pure numbers--the same for all substances.
     :math:`a(T)` and :math:`b` are substance-dependent.
@@ -173,6 +173,68 @@ class Cubic(CriticalConstants, CpIdealGas):
         return val_ref + self.cp_ig_integral(T_ref, T) + self.R*T*self.H_R_RT_expr(P, V, T, log=log)
 
     """Solving equations"""
+    def coefficients(self, T, P):
+        """Polynomial oefficients for cubic equation of state
+
+        .. math::
+            Z^3 c_0 + Z^2c_1 + Z*c_2 + c_3 = 0
+
+
+        :return: :code:`(c_0, c_1, c_2, c_3)`
+        """
+        B = self.beta_expr(T, P)
+        e = self.epsilon
+        o = self.sigma
+        q = self.q_expr(T)
+        return [
+            1,
+            B*(o + e - 1) - 1,
+            B*(B*(e*o - e - o) - e - o + q),
+            -B*B*(e*o*(1-B) - q)
+        ]
+
+    def cardano_constants(self, T, P):
+        """
+
+        :param T: temperature [T]
+        :param P: pressure [Pa]
+        :return: cardano constants p, q
+        :rtype: tuple
+        """
+        _, b_2, b_1, b_0 = self.coefficients(T, P)
+        return (
+            b_1 - b_2*b_2/3,                             # p
+            b_0 - b_1*b_2/3. + 2.*b_2*b_2*b_2/27.,       # q
+            b_2
+        )
+
+    def one_root(self, T, P):
+        p, q, b_2 = self.cardano_constants(T, P)
+        d = (p/3)*(p/3)*(p/3) + (q/2)*(q/2)
+        return (-q/2. + d**0.5)**(1./3.) + (-q/2. - d**0.5)**(1./3.) - b_2/3.
+
+    def num_roots(self, T, P):
+        """Find number of roots
+
+        See :cite:`Loperena2012,Deiters2002`
+
+        :param T: temperature in K
+        :param P: pressure in Pa
+        :return: number of roots
+        """
+        p, q, _ = self.cardano_constants(T, P)
+        discriminant = (p/3)*(p/3)*(p/3) + (q/2)*(q/2)
+        if discriminant > 0:
+            return 1
+
+        return 3
+
+    def check_roots(self, T_min, T_max, P_min, P_max):
+        """Check to see if all conditions have one root"""
+        for T in np.linspace(T_min, T_max, 10):
+            for P in np.linspace(P_min, P_max, 10):
+                print('T %5.1f K, P %4.2f MPa has %i roots' % (T, P*1e-6, self.num_roots(T, P)))
+
     def Z_vapor_RHS(self, Z, beta, q):
         """
         Compressibility of vapor :cite:`Perry`
@@ -279,7 +341,7 @@ class RedlichKwong(Cubic):
         return 1/T_r**0.5
 
     def d_ln_alpha_d_ln_Tr(self, T_r):
-        pass
+        return -1./2./T_r/T_r
 
 
 class SoaveRedlichKwong(RedlichKwong):

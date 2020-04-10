@@ -33,15 +33,24 @@ thermodynamic\_properties.critical\_properties module
 .. automodule:: thermodynamic_properties.critical_properties
    :members:
 
-thermodynamic\_properties.equation\_of\_state module
-----------------------------------------------------
+thermodynamic\_properties.eos module
+------------------------------------
 
-.. automodule:: thermodynamic_properties.equation_of_state
+.. automodule:: thermodynamic_properties.eos
 
-.. autoclass:: thermodynamic_properties.equation_of_state.Cubic
+.. autoclass:: thermodynamic_properties.eos.cubic.Cubic
     :members:
 
-.. autoclass:: thermodynamic_properties.equation_of_state.PengRobinson
+.. autoclass:: thermodynamic_properties.eos.cubic.RedlichKwong
+    :members:
+
+.. autoclass:: thermodynamic_properties.eos.cubic.SoaveRedlichKwong
+    :members:
+
+.. autoclass:: thermodynamic_properties.eos.cubic.PengRobinson
+    :members:
+
+.. autoclass:: thermodynamic_properties.eos.virial.SecondVirial
     :members:
 
 

@@ -108,8 +108,8 @@ class CpIdealGas:
         self.T_min_fit = T_min_fit
         self.T_max_fit = T_max_fit
 
-        assert self.T_min <= T_min_fit < self.T_max, 'Minimum temp not in correct range'
-        assert self.T_min < T_max_fit <= self.T_max, 'Minimum temp for fitting too low!'
+        assert self.T_min <= T_min_fit < self.T_max, 'Minimum temp not in correct range: {} !<= {} !<= {}'.format(self.T_min, T_min_fit, self.T_max)
+        assert self.T_min < T_max_fit <= self.T_max, 'Max temp not in correct range: {} !< {} !<= {}'.format(self.T_min, T_max_fit, self.T_max)
 
         self.Cp_poly = np.poly1d(
             np.polyfit(self.T_fit, self.eval(self.T_fit), poly_order)
