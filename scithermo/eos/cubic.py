@@ -223,11 +223,9 @@ class Cubic(CriticalConstants):
 
         return 3
 
-    def check_roots(self, T_min, T_max, P_min, P_max):
+    def print_roots(self, T, P):
         """Check to see if all conditions have one root"""
-        for T in np.linspace(T_min, T_max, 10):
-            for P in np.linspace(P_min, P_max, 10):
-                print('T %5.1f K, P %4.2f MPa has %i roots' % (T, P*1e-6, self.num_roots(T, P)))
+        print('%s %s at T %5.1f K, P %4.2f MPa has %i roots' % (self.compound_name, self.__class__, T, P*1e-6, self.num_roots(T, P)))
 
     def Z_vapor_RHS(self, Z, beta, q):
         """

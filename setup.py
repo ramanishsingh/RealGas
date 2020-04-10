@@ -8,14 +8,13 @@ setuptools.setup(
     version="0.0.1",
     author="Robert F. De Jaco",
     author_email="dejac001@umn.edu",
-    description="Scientific Thermodynamics",
+    description="Scientific Thermodynamics in Python",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/dejac001/distillation",
-    packages=['thermodynamic'],
-    package_data={'distillation': [
-        'equilibrium_data/depriester.csv', 'equilibrium_data/heat_capacity_liquid.csv',
-        'equilibrium_data/heats_of_vaporization.csv',
+    url="https://github.com/dejac001/SciThermo",
+    packages=['scithermo'],
+    package_data={'scithermo': [
+        'cp_ig.csv', 'critical_constants.csv'
     ]},
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -23,5 +22,5 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
-    install_requires=["numpy==1.18.1","scipy == 1.4.1"]
+    install_requires=["matplotlib==3.2.1", "numpy==1.18.2", "scipy==1.4.1"]
 )
