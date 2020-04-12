@@ -17,7 +17,7 @@ A tutorial can be found [here](tutorial.ipynb)
 
 Documentation
 =============
-The online documentation can be found [here](https://dejac001.github.io/SciThermo).
+The online documentation is hosted at [read the docs](https://scithermo.readthedocs.io/en/master/).
 
 Contributing
 ============
