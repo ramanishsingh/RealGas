@@ -7,7 +7,7 @@ class KVapor:
     r"""Thermal Conductivity of Inorganic and Organic Substances [W/m/K] :cite:`DIPPR`
 
     .. math::
-        k = \frac{C_1T^C_2}{1 + C_3/T + C_4 / T^2}
+        k = \frac{C_1T^{C_2}}{1 + C_3/T + C_4 / T^2}
         :label: k_vapor
 
     where :math:`k` is the thermal conductivity in W/m/K and :math:`T` is in K.

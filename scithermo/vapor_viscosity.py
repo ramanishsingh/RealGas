@@ -7,7 +7,7 @@ class MuVapor:
     r"""Vapor Viscosity of Inorganic and Organic Substances [W/m/K] :cite:`DIPPR`
 
     .. math::
-        \mu = \frac{C_1T^C_2}{1 + C_3/T + C_4 / T^2}
+        \mu = \frac{C_1T^{C_2}}{1 + C_3/T + C_4 / T^2}
         :label: mu_vapor
 
     where :math:`\mu` is the thermal conductivity in W/m/K and :math:`T` is in K.
