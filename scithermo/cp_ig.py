@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from scithermo.util import percent_difference
 from scithermo.chem_constants import R_si_units
 
+
 class CpIdealGas:
     r"""Heat Capacity :math:`C_{\mathrm{p}}^{\mathrm{IG}}` [J/mol/K] at Constant Pressure of Inorganic and Organic Compounds in the
     Ideal Gas State Fit to Hyperbolic Functions :cite:`DIPPR`
@@ -253,9 +254,9 @@ class CpStar(CpIdealGas):
         """
 
         :param T: temperature in K
-        :param f_sinh: function for hyperbolic sine, defaults to :ref:`np.sinh`
+        :param f_sinh: function for hyperbolic sine, defaults to :code:`np.sinh`
         :type f_sinh: callable
-        :param f_cosh: function for hyperbolic cosine, defaults to :ref:`np.cosh`
+        :param f_cosh: function for hyperbolic cosine, defaults to :code:`np.cosh`
         :type f_cosh: callable
         :return: :math:`C_{\\mathrm{p}}^{\\star}` [dimensionless] (see equation :eq:`cp_ig_star`)
         """

@@ -16,6 +16,8 @@ Welcome to SciThermo's documentation!
    critical_properties
    virial
    cubic
+   thermal_conductivity
+   viscosity
    zreferences
 
 
