@@ -40,12 +40,6 @@ class Virial:
             self.B0_expr(T_r) + w*self.B1_expr(T_r)
         )
 
-    def calc_Z_from_units(self, P, T, w, T_c, P_c):
-        return 1. + self.B_expr(T/T_c, w, T_c, P_c)*P/self.R/T
-
-    def calc_Z_from_dimensionless(self, w, P_r, T_r):
-        return 1 + (self.B0_expr(T_r) + w*self.B1_expr(T_r))*P_r/T_r
-
 
 class SecondVirial(CriticalConstants, Virial):
     """Virial equation of state for one component. See :cite:`Perry,Smith2005`
@@ -105,6 +99,12 @@ class SecondVirial(CriticalConstants, Virial):
         P_r = P / self.P_c
         return -P_r * (self.d_B0_d_Tr_expr(T_r) + self.w*self.d_B1_d_Tr_expr(T_r))
 
+    def calc_Z_from_units(self, P, T):
+        return 1. + self.B_expr(T/self.T_c, self.w, self.T_c, self.P_c)*P/self.R/T
+
+    def calc_Z_from_dimensionless(self, P_r, T_r):
+        return 1 + (self.B0_expr(T_r) + self.w*self.B1_expr(T_r))*P_r/T_r
+
     def plot_Z_vs_P(self, T, P_min, P_max, symbol='o', ax=None, **kwargs):
         """Plot compressibility as a function of pressure
 
@@ -129,7 +129,7 @@ class SecondVirial(CriticalConstants, Virial):
             ax.set_xlabel('$P$ [Pa]')
 
         P = np.linspace(P_min, P_max)
-        Z = [self.calc_Z_from_dimensionless(self.w, pressure/self.P_c, T/self.T_c) for pressure in P]
+        Z = [self.calc_Z_from_dimensionless(pressure/self.P_c, T/self.T_c) for pressure in P]
         ax.plot(P, Z, symbol, markerfacecolor='None', **kwargs)
 
 
@@ -148,7 +148,7 @@ class BinarySecondVirial(CriticalConstants, Virial):
     .. math::
         \begin{align}
             Z_{\mathrm{c},ij} &= \frac{Z_{\mathrm{c},c1} + Z_{\mathrm{c},c2}}{2} \\\
-            V_{\mathrm{c},ij} &= \left(\frac{V_{\mathrm{c},c1}^{1/3} + V_{\mathrm{c},c2}^{1/3}}{2}\right)^{1/3}
+            V_{\mathrm{c},ij} &= \left(\frac{V_{\mathrm{c},c1}^{1/3} + V_{\mathrm{c},c2}^{1/3}}{2}\right)^{3}
         \end{align}
 
     :param k_ij: equation of state mixing rule in calculation of critical temperautre, see Equation :eq:`eq_Tcij`. When :math:`c1=c2` and for chemical similar species, :math:`k_{ij}=0`. Otherwise, it is a small (usually) positive number evaluated from minimal :math:`PVT` data or, in the absence of data, set equal to zero.
@@ -172,7 +172,7 @@ class BinarySecondVirial(CriticalConstants, Virial):
         self.T_c_ij = pow(self.c1.T_c * self.c2.T_c, 0.5) * (1. - self.k_ij)
         self.Z_c_ij = (self.c1.Z_c + self.c2.Z_c) / 2.
         self.V_c_ij = pow(
-            (pow(self.c1.V_c, 1 / 3) + pow(self.c2.V_c, 1 / 3)) / 2., 1 / 3
+            (pow(self.c1.V_c, 1 / 3) + pow(self.c2.V_c, 1 / 3)) / 2., 3
         )
         self.P_c_ij = self.Z_c_ij*self.R*self.T_c_ij/self.V_c_ij
         self.other_cas = {
@@ -234,7 +234,7 @@ class BinarySecondVirial(CriticalConstants, Virial):
         """
 
         :param y_k: mole fractions of each component :math:`k`
-        :type y_k: dict
+        :type y_k: dict[:attr:`cas_numbers`, float]
         :param T: temperature in K
         :return: :math:`B` [m^3/mol], where :math:`Z = 1 + BP/R/T`
         """

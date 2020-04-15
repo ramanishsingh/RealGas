@@ -1,6 +1,9 @@
 Virial Equation of State
 ========================
 
+.. autoclass:: scithermo.eos.virial.Virial
+    :members:
+
 .. autoclass:: scithermo.eos.virial.SecondVirial
     :members:
 
