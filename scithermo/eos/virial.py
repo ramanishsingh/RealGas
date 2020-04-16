@@ -158,12 +158,22 @@ class BinarySecondVirial(CriticalConstants, Virial):
 
     """
     def __init__(self,
-                 dippr_no_i: str = None, compound_name_i: str = None, cas_number_i: str = None,
-                 dippr_no_j: str = None, compound_name_j: str = None, cas_number_j: str = None,
+                 i_kwargs = None, j_kwargs=None,
                  k_ij = 0., pow: callable=np.power):
-        self.c1 = CriticalConstants(dippr_no=dippr_no_i, compound_name=compound_name_i, cas_number=cas_number_i)
-        self.c2 = CriticalConstants(dippr_no=dippr_no_j, compound_name=compound_name_j, cas_number=cas_number_j)
+        """
+
+        :param i_kwargs: kwargs for component i passed to critical constants
+        :param j_kwargs: kwargs for component j passed to critical constants
+        """
+        if i_kwargs is None:
+            i_kwargs = {}
+        if j_kwargs is None:
+            j_kwargs = {}
+        self.c1 = CriticalConstants(**i_kwargs)
+        self.c2 = CriticalConstants(**j_kwargs)
         Virial.__init__(self, pow)
+        assert self.c1.cas_number != self.c2.cas_number, 'Errors anticipated when cas numbers are equal if other properties are not'
+        self.R = self.c1.R
 
         self.k_ij = k_ij
         self.w_ij = (self.c1.w + self.c2.w) / 2.

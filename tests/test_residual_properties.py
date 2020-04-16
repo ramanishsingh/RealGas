@@ -28,12 +28,5 @@ class MyTestCase(unittest.TestCase):
             self.assertAlmostEqual(I.G_R_RT_expr(P, V, T), I.H_R_RT_expr(P, V, T)-I.S_R_R_expr(P, V, T))
 
 
-# def test_residuals(self):
-    #     for c1 in compounds_to_test:
-    #         I = CriticalConstants(compound_name=c1)
-    #         self.assertLess(I.Z_c_percent_difference(), self.tol)
-    #     self.assertEqual(True, False)
-
-
 if __name__ == '__main__':
     unittest.main()
