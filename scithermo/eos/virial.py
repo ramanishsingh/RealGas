@@ -1,4 +1,3 @@
-from scithermo.chem_constants import R_si_units
 from scithermo.critical_constants import CriticalConstants
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,7 +11,6 @@ class Virial:
     :type pow: callable, optional
     """
     def __init__(self, pow: callable=np.power):
-        self.R = R_si_units
         self.pow = pow
 
     def B0_expr(self, T_r):
@@ -46,12 +44,12 @@ class SecondVirial(CriticalConstants, Virial):
 
     """
     def __init__(self, dippr_no: str = None, compound_name: str = None, cas_number: str = None,
-                 pow: callable=np.power):
+                 pow: callable=np.power, **kwargs):
         """
 
-        :param kwargs: used in :ref:`CpIdealGas`
+        :param kwargs: for customized critica constants
         """
-        CriticalConstants.__init__(self, dippr_no, compound_name, cas_number)
+        CriticalConstants.__init__(self, dippr_no, compound_name, cas_number, **kwargs)
         Virial.__init__(self, pow=pow)
 
     def d_B_d_Tr(self, T):

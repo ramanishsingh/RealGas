@@ -1,4 +1,3 @@
-from scithermo.chem_constants import R_si_units
 from scithermo.critical_constants import CriticalConstants
 from scithermo.util import percent_difference
 import matplotlib.pyplot as plt
@@ -30,9 +29,12 @@ class Cubic(CriticalConstants):
 
     """
     def __init__(self, sigma: float, epsilon: float, Omega: float, Psi: float,
-                 dippr_no: str = None, compound_name: str = None, cas_number: str = None):
-        CriticalConstants.__init__(self, dippr_no, compound_name, cas_number)
-        self.R = R_si_units
+                 dippr_no: str = None, compound_name: str = None, cas_number: str = None, **kwargs):
+        """
+
+        :param kwargs: for customized critica constants
+        """
+        CriticalConstants.__init__(self, dippr_no, compound_name, cas_number, **kwargs)
         self.sigma = sigma
         self.epsilon = epsilon
         self.Omega = Omega
@@ -261,7 +263,7 @@ class Cubic(CriticalConstants):
         Z = self.Z_expr(P, V, T)
         return Z - self.Z_vapor_RHS(Z, self.beta_expr(T, P), self.q_expr(T))
 
-    def iterate_to_solve_Z(self, T, P, phase):
+    def iterate_to_solve_Z(self, T, P, phase) -> float:
         """
 
         :param T: temperature in K
@@ -287,10 +289,10 @@ class Cubic(CriticalConstants):
 
         return Z_n
 
-    def iterate_Z_vapor(self, T, P):
+    def iterate_Z_vapor(self, T, P) -> float:
         return self.iterate_to_solve_Z(T, P, 'vapor')
 
-    def iterate_Z_liquid(self, T, P):
+    def iterate_Z_liquid(self, T, P) -> float:
         return self.iterate_to_solve_Z(T, P, 'liquid')
 
     def plot_Z_vs_P(self, T, P_min, P_max, phase='vapor', symbol='o', ax=None, **kwargs):
