@@ -1,4 +1,5 @@
 from scithermo.critical_constants import CriticalConstants
+from scithermo.chem_constants import R_si_units
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -7,11 +8,15 @@ class Virial:
     """
     :param R: gas constant, set to SI units
     :type R: float, hard-coded
-    :param pow: function for computing power, defaults to :ref:`np.power`
+    :param pow: function for computing power, defaults to numpy.power
     :type pow: callable, optional
+    :param exp: function for computing logarithm, defaults to numpy.exp
+    :type exp: callable, optional
     """
-    def __init__(self, pow: callable=np.power):
+    def __init__(self, pow: callable=np.power, exp: callable=np.exp):
         self.pow = pow
+        self.exp = exp
+        self.R = R_si_units
 
     def B0_expr(self, T_r):
         return 0.083 - 0.422*self.pow(T_r, -1.6)
@@ -97,6 +102,23 @@ class SecondVirial(CriticalConstants, Virial):
         P_r = P / self.P_c
         return -P_r * (self.d_B0_d_Tr_expr(T_r) + self.w*self.d_B1_d_Tr_expr(T_r))
 
+    def ln_hat_phi_i_expr(self, P, T):
+        r"""logarithm of fugacity coefficient
+
+        .. math::
+            \ln\hat{\phi}_i = \frac{PB}{RT}
+
+        :param P: pressure in Pa
+        :type P: float
+        :param T: temperature in K
+        :type T: float
+        """
+        T_r = T / self.T_c
+        return P*self.B_expr(T_r, self.w, self.T_c, self.P_c)/self.R/T
+
+    def hat_phi_i_expr(self, *args):
+        return self.log(self.ln_hat_phi_i_expr(*args))
+
     def calc_Z_from_units(self, P, T):
         return 1. + self.B_expr(T/self.T_c, self.w, self.T_c, self.P_c)*P/self.R/T
 
@@ -173,7 +195,6 @@ class BinarySecondVirial(CriticalConstants, Virial):
         self.c2 = CriticalConstants(**j_kwargs)
         Virial.__init__(self, pow)
         assert self.c1.cas_number != self.c2.cas_number, 'Errors anticipated when cas numbers are equal if other properties are not'
-        self.R = self.c1.R
 
         self.k_ij = k_ij
         self.w_ij = (self.c1.w + self.c2.w) / 2.
@@ -294,6 +315,23 @@ class BinarySecondVirial(CriticalConstants, Virial):
         return P*(
                 self.B_ij_expr(cas_i, cas_i, T) - (1.-y_i)*(1.-y_i)*self.d_ij_expr(T)
         )/self.R/T
+
+    def hat_phi_i_expr(self, *args):
+        return self.exp(self.ln_hat_phi_i_expr(*args))
+
+    def fugacity_i_expr(self, cas_i, y_i, P, T):
+        r"""Fugacity of component i in mixture :math:`f_i=\hat{\phi}_i y_i P`
+
+        :param cas_i: cas number for component of interest
+        :type cas_i: str
+        :param y_i: mole fraction of component of interest
+        :type y_i: float
+        :param P: pressure in Pa
+        :type P: float
+        :param T: temperature in K
+        :type T: float
+        """
+        return self.hat_phi_i_expr(cas_i, y_i, P, T) * y_i * P
 
     def bar_GiR_RT(self, *args):
         r"""Dimensionless residual partial molar free energy of component :math:`c1`
