@@ -43,6 +43,12 @@ class Virial:
             self.B0_expr(T_r) + w*self.B1_expr(T_r)
         )
 
+    def ln_hat_phi_i_expr(self, *args):
+        raise NotImplementedError
+
+    def hat_phi_i_expr(self, *args):
+        return self.exp(self.ln_hat_phi_i_expr(*args))
+
 
 class SecondVirial(CriticalConstants, Virial):
     """Virial equation of state for one component. See :cite:`Perry,Smith2005`
@@ -105,6 +111,9 @@ class SecondVirial(CriticalConstants, Virial):
     def ln_hat_phi_i_expr(self, P, T):
         r"""logarithm of fugacity coefficient
 
+        .. note::
+            single-component version
+
         .. math::
             \ln\hat{\phi}_i = \frac{PB}{RT}
 
@@ -115,9 +124,6 @@ class SecondVirial(CriticalConstants, Virial):
         """
         T_r = T / self.T_c
         return P*self.B_expr(T_r, self.w, self.T_c, self.P_c)/self.R/T
-
-    def hat_phi_i_expr(self, *args):
-        return self.log(self.ln_hat_phi_i_expr(*args))
 
     def calc_Z_from_units(self, P, T):
         return 1. + self.B_expr(T/self.T_c, self.w, self.T_c, self.P_c)*P/self.R/T
@@ -159,7 +165,7 @@ class BinarySecondVirial(CriticalConstants, Virial):
     .. math::
         \begin{align}
             w_{ij} &= \frac{w_i + w_j}{2} \\
-            T_{\mathrm{c},ij} &= \sqrt{T_{\mathrm{c},c1}T_{\mathrm{c},c2}}(1-k_{ij}) :label:eq_Tcij\\
+            T_{\mathrm{c},ij} &= \sqrt{T_{\mathrm{c},i}T_{\mathrm{c},j}}(1-k_{ij}) :label:eq_Tcij\\
             P_{\mathrm{c},ij} &= \frac{Z_{\mathrm{c},ij}RT_{\mathrm{c},ij}}{V_{\mathrm{c},ij}} \\
         \end{align}
 
@@ -167,11 +173,11 @@ class BinarySecondVirial(CriticalConstants, Virial):
 
     .. math::
         \begin{align}
-            Z_{\mathrm{c},ij} &= \frac{Z_{\mathrm{c},c1} + Z_{\mathrm{c},c2}}{2} \\\
-            V_{\mathrm{c},ij} &= \left(\frac{V_{\mathrm{c},c1}^{1/3} + V_{\mathrm{c},c2}^{1/3}}{2}\right)^{3}
+            Z_{\mathrm{c},ij} &= \frac{Z_{\mathrm{c},i} + Z_{\mathrm{c},j}}{2} \\\
+            V_{\mathrm{c},ij} &= \left(\frac{V_{\mathrm{c},i}^{1/3} + V_{\mathrm{c},j}^{1/3}}{2}\right)^{3}
         \end{align}
 
-    :param k_ij: equation of state mixing rule in calculation of critical temperautre, see Equation :eq:`eq_Tcij`. When :math:`c1=c2` and for chemical similar species, :math:`k_{ij}=0`. Otherwise, it is a small (usually) positive number evaluated from minimal :math:`PVT` data or, in the absence of data, set equal to zero.
+    :param k_ij: equation of state mixing rule in calculation of critical temperautre, see Equation :eq:`eq_Tcij`. When :math:`i=j` and for chemical similar species, :math:`k_{ij}=0`. Otherwise, it is a small (usually) positive number evaluated from minimal :math:`PVT` data or, in the absence of data, set equal to zero.
     :type k_ij: float
     :param cas_pairs: pairs of cas registry numbers, derived from cas_numbers calculated
     :type cas_pairs: list(tuple(str))
@@ -191,22 +197,22 @@ class BinarySecondVirial(CriticalConstants, Virial):
             i_kwargs = {}
         if j_kwargs is None:
             j_kwargs = {}
-        self.c1 = CriticalConstants(**i_kwargs)
-        self.c2 = CriticalConstants(**j_kwargs)
+        self.i = CriticalConstants(**i_kwargs)
+        self.j = CriticalConstants(**j_kwargs)
         Virial.__init__(self, pow)
-        assert self.c1.cas_number != self.c2.cas_number, 'Errors anticipated when cas numbers are equal if other properties are not'
+        assert self.i.cas_number != self.j.cas_number, 'Errors anticipated when cas numbers are equal if other properties are not'
 
         self.k_ij = k_ij
-        self.w_ij = (self.c1.w + self.c2.w) / 2.
-        self.T_c_ij = pow(self.c1.T_c * self.c2.T_c, 0.5) * (1. - self.k_ij)
-        self.Z_c_ij = (self.c1.Z_c + self.c2.Z_c) / 2.
+        self.w_ij = (self.i.w + self.j.w) / 2.
+        self.T_c_ij = pow(self.i.T_c * self.j.T_c, 0.5) * (1. - self.k_ij)
+        self.Z_c_ij = (self.i.Z_c + self.j.Z_c) / 2.
         self.V_c_ij = pow(
-            (pow(self.c1.V_c, 1 / 3) + pow(self.c2.V_c, 1 / 3)) / 2., 3
+            (pow(self.i.V_c, 1 / 3) + pow(self.j.V_c, 1 / 3)) / 2., 3
         )
         self.P_c_ij = self.Z_c_ij*self.R*self.T_c_ij/self.V_c_ij
         self.other_cas = {
-            self.c1.cas_number: self.c2.cas_number,
-            self.c2.cas_number: self.c1.cas_number,
+            self.i.cas_number: self.j.cas_number,
+            self.j.cas_number: self.i.cas_number,
         }
         self.cas_pairs = []
         for x in self.other_cas.keys():
@@ -214,23 +220,23 @@ class BinarySecondVirial(CriticalConstants, Virial):
                 self.cas_pairs.append((x, y))
 
     def get_w_Tc_Pc(self, cas_i, cas_j=None):
-        """Returns critical constants for calculation based off of whetner c1 = c2 or not
+        """Returns critical constants for calculation based off of whetner i = j or not
 
         :returns: (:math:`w`, :math:`T_c`, :math:`P_c`)
         :rtype: tuple
         """
-        if cas_i == self.c1.cas_number and (cas_i == cas_j or cas_j is None):
-            return self.c1.w, self.c1.T_c, self.c1.P_c
-        if cas_i == self.c2.cas_number and (cas_i == cas_j or cas_j is None):
-            return self.c2.w, self.c2.T_c, self.c2.P_c
+        if cas_i == self.i.cas_number and (cas_i == cas_j or cas_j is None):
+            return self.i.w, self.i.T_c, self.i.P_c
+        if cas_i == self.j.cas_number and (cas_i == cas_j or cas_j is None):
+            return self.j.w, self.j.T_c, self.j.P_c
         if cas_i == self.other_cas[cas_j]:
             return self.w_ij, self.T_c_ij, self.P_c_ij
 
     def B_ij_expr(self, cas_1, cas_2, T):
         r"""
-        Returns :math:`B_{ij}` considering that :code:`c1=c2` or :code:`c1!=c2`
+        Returns :math:`B_{ij}` considering that :code:`i=j` or :code:`i!=j`
 
-        If :code:`c1=c2`, find the component :math:`k` for which :code:`k=c1=c2` (all cas no's equal).
+        If :code:`i=j`, find the component :math:`k` for which :code:`k=i=j` (all cas no's equal).
         Then return :math:`B_{kk}` where
 
         .. math::
@@ -238,7 +244,7 @@ class BinarySecondVirial(CriticalConstants, Virial):
             B^0\left(\frac{T}{T_{\mathrm{c},k}}\right) + \omega_k\left(\frac{T}{T_{\mathrm{c},k}}\right)
             \right]
 
-        Otherwise, if :code:`c1!=c2`, return :math:`B_{ij}`, where
+        Otherwise, if :code:`i!=j`, return :math:`B_{ij}`, where
 
         .. math::
             B_{ij}=\frac{RT_{\mathrm{c},ij}}{P_{\mathrm{c},ij}}\left[
@@ -291,9 +297,9 @@ class BinarySecondVirial(CriticalConstants, Virial):
         :param T: temperature [K]
         :return: :math:`\\delta_{ij}` [m**3/mol]
         """
-        return 2.*self.B_ij_expr(self.c1.cas_number, self.c2.cas_number, T) \
-                - self.B_ij_expr(self.c1.cas_number, self.c1.cas_number, T) \
-                - self.B_ij_expr(self.c2.cas_number, self.c2.cas_number, T)
+        return 2.*self.B_ij_expr(self.i.cas_number, self.j.cas_number, T) \
+                - self.B_ij_expr(self.i.cas_number, self.i.cas_number, T) \
+                - self.B_ij_expr(self.j.cas_number, self.j.cas_number, T)
 
     def ln_hat_phi_i_expr(self, cas_i, y_i, P, T):
         r"""logarithm of fugacity coefficient
@@ -316,9 +322,6 @@ class BinarySecondVirial(CriticalConstants, Virial):
                 self.B_ij_expr(cas_i, cas_i, T) - (1.-y_i)*(1.-y_i)*self.d_ij_expr(T)
         )/self.R/T
 
-    def hat_phi_i_expr(self, *args):
-        return self.exp(self.ln_hat_phi_i_expr(*args))
-
     def fugacity_i_expr(self, cas_i, y_i, P, T):
         r"""Fugacity of component i in mixture :math:`f_i=\hat{\phi}_i y_i P`
 
@@ -334,7 +337,7 @@ class BinarySecondVirial(CriticalConstants, Virial):
         return self.hat_phi_i_expr(cas_i, y_i, P, T) * y_i * P
 
     def bar_GiR_RT(self, *args):
-        r"""Dimensionless residual partial molar free energy of component :math:`c1`
+        r"""Dimensionless residual partial molar free energy of component :math:`i`
 
         .. math::
             \frac{\bar{G}^\mathrm{R}_i}{RT} = \ln\hat{\phi}_i
@@ -356,12 +359,46 @@ class BinarySecondVirial(CriticalConstants, Virial):
 
         :param T: temperature [K]
         """
-        return 2.*self.d_Bij_d_Tr(self.c1.cas_number, self.c2.cas_number, T) \
-               - self.d_Bij_d_Tr(self.c1.cas_number, self.c1.cas_number, T) \
-               - self.d_Bij_d_Tr(self.c2.cas_number, self.c2.cas_number, T)
+        return 2.*self.d_Bij_d_Tr(self.i.cas_number, self.j.cas_number, T) \
+               - self.d_Bij_d_Tr(self.i.cas_number, self.i.cas_number, T) \
+               - self.d_Bij_d_Tr(self.j.cas_number, self.j.cas_number, T)
+
+    def Tstar_d_lnphi_dTstar(self, cas_i, y_i, P, T):
+        r"""Returns
+
+        .. math::
+            \begin{align}
+                T^\star \frac{\partial \ln{\hat{\phi}_i}}{\partial T^\star}
+                    &=  \frac{T T_\text{ref}}{T_\text{ref}}\frac{\partial \ln{\hat{\phi}_i}}{\partial T}
+                    = \frac{T}{T_\text{c}}\frac{\partial \ln{\hat{\phi}_i}}{\partial T_\text{r}} \\
+                &= \frac{T}{T_\text{c}}\left[
+                                        \frac{P}{RT}\left(
+                                            \frac{\partial B_{ii}}{\partial T_r} + (1-y_i)^2\frac{\partial \delta_{ij}}{\partial T_r}
+                                            \right)
+                                        - \frac{T_c\ln\hat{\phi}_i}{T}
+                \right] \\
+                &= \frac{P}{R T_\text{c}}\left(
+                                            \frac{\partial B_{ii}}{\partial T_r} + (1-y_i)^2\frac{\partial \delta_{ij}}{\partial T_r}
+                                            \right)
+                                        - \ln\hat{\phi}_i \\
+                &= -\frac{\bar{H}_i^\text{R}}{RT}
+            \end{align}
+
+        where :math:`\frac{\partial \delta_{ij}}{\partial T_r}` is given by :eq:`eq_d_dij`
+
+        :param cas_i: cas number for component of interest
+        :type cas_i: str
+        :param y_i: mole fraction of component of interest
+        :type y_i: float
+        :param P: pressure in Pa
+        :type P: float
+        :param T: temperature in K
+        :type T: float
+        """
+        return -self.bar_HiR_RT(cas_i, y_i, P, T)
 
     def bar_HiR_RT(self, cas_i, y_i, P, T):
-        r"""Dimensionless residual partial molar enthalpy of component :math:`c1`
+        r"""Dimensionless residual partial molar enthalpy of component :math:`i`
 
         .. math::
             \begin{align}
@@ -379,7 +416,7 @@ class BinarySecondVirial(CriticalConstants, Virial):
         so that we obtain
 
         .. math::
-            \frac{\bar{H}^\mathrm{R}_i}{RT} = \frac{P}{RT_c}\left[
+            \frac{\bar{H}^\mathrm{R}_i}{RT} = -\frac{P}{RT_c}\left[
                         \frac{\partial B_{ii}}{\partial T_r} + (1-y_i)^2\frac{\partial \delta_{ij}}{\partial T_r}
                                             \right]
                                         + \ln\hat{\phi}_i
@@ -395,10 +432,10 @@ class BinarySecondVirial(CriticalConstants, Virial):
         :type T: float
         """
         w, T_c, P_c = self.get_w_Tc_Pc(cas_i)
-        return P/self.R/T_c*(self.d_Bij_d_Tr(cas_i, cas_i, T) + (1.-y_i)*(1.-y_i)*self.d_dij_d_Tr(T)) + self.ln_hat_phi_i_expr(cas_i, y_i, P, T)
+        return -P/self.R/T_c*(self.d_Bij_d_Tr(cas_i, cas_i, T) + (1.-y_i)*(1.-y_i)*self.d_dij_d_Tr(T)) + self.ln_hat_phi_i_expr(cas_i, y_i, P, T)
 
     def bar_SiR_R(self, cas_i, y_i, P, T):
-        r"""Dimensionless residual partial molar entropy of component :math:`c1`
+        r"""Dimensionless residual partial molar entropy of component :math:`i`
 
         Since
 
@@ -416,7 +453,7 @@ class BinarySecondVirial(CriticalConstants, Virial):
         By comparing Equation :eq:`eq_GiR` and :eq:`eq_HiR` it is observed that
 
         .. math::
-            \frac{\bar{S}_i^\mathrm{R}}{R} = \frac{P}{RT_c}\left[
+            \frac{\bar{S}_i^\mathrm{R}}{R} = -\frac{P}{RT_c}\left[
                         \frac{\partial B_{ii}}{\partial T_r} + (1-y_i)^2\frac{\partial \delta_{ij}}{\partial T_r}
                                             \right]
 
@@ -432,7 +469,7 @@ class BinarySecondVirial(CriticalConstants, Virial):
         :type T: float
         """
         w, T_c, P_c = self.get_w_Tc_Pc(cas_i)
-        return P/self.R/T_c*(
+        return -P/self.R/T_c*(
             self.d_Bij_d_Tr(cas_i, cas_i, T) + (1.-y_i)*(1.-y_i)*self.d_dij_d_Tr(T)
         )
 
@@ -469,7 +506,7 @@ class BinarySecondVirial(CriticalConstants, Virial):
         y_j = 1.-y_i
         cas_j = self.other_cas[cas_i]
         return (
-                y_i*method(cas_i, y_i, P, T) + (1.-y_i)*method(cas_j, y_j, P, T)
+                y_i*method(cas_i, y_i, P, T) + y_j*method(cas_j, y_j, P, T)
         )
 
     def S_R_R(self, *args):
@@ -489,12 +526,12 @@ class BinarySecondVirial(CriticalConstants, Virial):
             fig = plt.figure()
             ax = fig.add_subplot(111)
             ax.set_ylabel('Dimensionless')
-            ax.set_xlabel('Gas-Phase Mole fraction %s' % self.c1.compound_name)
+            ax.set_xlabel('Gas-Phase Mole fraction %s' % self.i.compound_name)
 
         y_1 = np.linspace(0., 1.)
-        HR_RT = np.array(list(self.H_R_RT(self.c1.cas_number, i, P, T) for i in y_1))
-        GR_RT = np.array(list(self.G_R_RT(self.c1.cas_number, i, P, T) for i in y_1))
-        SR_R = np.array(list(self.S_R_R(self.c1.cas_number, i, P, T) for i in y_1))
+        HR_RT = np.array(list(self.H_R_RT(self.i.cas_number, i, P, T) for i in y_1))
+        GR_RT = np.array(list(self.G_R_RT(self.i.cas_number, i, P, T) for i in y_1))
+        SR_R = np.array(list(self.S_R_R(self.i.cas_number, i, P, T) for i in y_1))
         ax.plot(y_1, HR_RT, '-', label='$H^\\mathrm{R}/(RT)$')
         ax.plot(y_1, GR_RT, '--', label='$G^\\mathrm{R}/(RT)$')
         ax.plot(y_1, SR_R, '-.', label='$S^\\mathrm{R}/R$')
