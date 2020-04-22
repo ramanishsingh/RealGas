@@ -2,10 +2,13 @@ Heat Capacity
 =============
 
 
-.. automodule:: scithermo.cp_ig
+.. automodule:: scithermo.cp
 
-.. autoclass:: scithermo.cp_ig.CpIdealGas
+.. autoclass:: scithermo.cp.CpIdealGas
     :members:
 
-.. autoclass:: scithermo.cp_ig.CpStar
+.. autoclass:: scithermo.cp.CpStar
+    :members:
+
+.. autoclass:: scithermo.cp.CpRawData
     :members:

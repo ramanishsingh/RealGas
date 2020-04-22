@@ -4,8 +4,10 @@
 """
 
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
 import unittest
-from scithermo.cp_ig import CpIdealGas, CpStar
+from scithermo.cp import CpIdealGas, CpStar, CpRawData, CpStarRawData
 from scithermo.util import percent_difference
 
 compounds_to_test = ['Butane', 'Carbon dioxide', 'Carbon monoxide',
@@ -64,6 +66,15 @@ class MyTestCase(unittest.TestCase):
             self.assertAlmostEqual(
                 I.R*I.T_ref*I.cp_integral(200./I.T_ref, 400./I.T_ref), J.cp_integral(200., 400)
             )
+
+    def test_cp_raw(self):
+        """Test getting cp and fitting from file for units and dimensionless versions
+        The code automatically fits Cp and calculates goodness of fit and will fail if fit is not good enough
+        """
+        import pandas as pd
+        df = pd.read_csv('Cp_raw_data/MFI.tsv', delimiter='\t')
+        I = CpRawData(df['T [K]'], df['Cp [J/mol/K]'], T_min_fit=200., T_max_fit=350.)
+        J = CpStarRawData(df['T [K]'], df['Cp [J/mol/K]'], T_min_fit=200., T_max_fit=350., T_ref=200.)
 
 
 if __name__ == '__main__':

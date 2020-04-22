@@ -1,4 +1,5 @@
 import numpy as np
+import logging
 import matplotlib.pyplot as plt
 from scithermo.util import percent_difference
 from scithermo.chem_constants import R_si_units
@@ -32,6 +33,8 @@ class CpIdealGas:
     :type T_min: float, derived from input
     :param T_max: maximum temperature of validity [K]
     :type T_max: float, derived from input
+    :param T_min_fit: minimum temperature for fitting, defaults to Tmin
+    :param T_max_fit: maximum temperature for fitting, defaults to Tmax
     :param C1: parameter in Equation :eq:`cp_ig`
     :type C1: float, derived from input
     :param C2: parameter in Equation :eq:`cp_ig`
@@ -42,22 +45,20 @@ class CpIdealGas:
     :type C4: float, derived from input
     :param C5: parameter in Equation :eq:`cp_ig`
     :type C5: float, derived from input
-    :param units: units for :math:`C_{\mathrm{p}}^{\mathrm{IG}}`, set to J/mol/K
-    :type units: str
+    :param Cp_units: units for :math:`C_{\mathrm{p}}^{\mathrm{IG}}`, defaults to J/mol/K
+    :type Cp_units: str, optional
+    :param T_units: units for :math:`T`, defaults to K
+    :type T_units: str, optional
+    :param n_points_fit: number of points for fitting polynomial and plotting, defaults to 1000
+    :type n_points_fit: int, optional
+    :param poly_order: order of polynomial for fitting, defaults to 2
+    :type poly_order: int, optional
 
     """
 
     def __init__(self, dippr_no: str = None, compound_name: str = None, cas_number: str = None,
                  T_min_fit: float = None, T_max_fit: float = None, n_points_fit: int = 1000,
-                 poly_order: int = 2):
-        """
-        :param n_points_fit: number of points for fitting polynomial and plotting, defaults to 1000
-        :type n_points_fit: int, optional
-        :param poly_order: order of polynomial for fitting,d efaults to 2
-        :type poly_order: int, optional
-        :param T_min_fit: minimum temperature for fitting, defaults to Tmin
-        :param T_max_fit: maximum temperature for fitting, defaults to Tmax
-        """
+                 poly_order: int = 2, T_units='K', Cp_units='J/mol/K'):
         from scithermo import os, ROOT_DIR
         file = os.path.join(ROOT_DIR, 'cp_ig.csv')
         my_header = [
@@ -70,7 +71,8 @@ class CpIdealGas:
         self.cas_number = cas_number
 
         found_compound = False
-        self.units = 'J/mol/K'
+        self.Cp_units = Cp_units
+        self.T_units = T_units
         with open(file, 'r') as f:
             header = next(f).rstrip('\n').split(',')
             assert header == my_header, 'Wrong header!'
@@ -149,14 +151,14 @@ class CpIdealGas:
         ax.plot(T_all, vals, '-', label='Hyperbolic Functions')
         ax.plot(self.T_fit, approx_vals, '--', markerfacecolor='None', label='Polynomial')
         ax.legend()
-        ax.set_xlabel('Temperature [K]')
-        ax.set_ylabel('CpIg [%s]' % self.units)
+        ax.set_xlabel('Temperature [%s]' % self.T_units)
+        ax.set_ylabel('CpIg [%s]' % self.Cp_units)
 
     def cp_integral(self, T_a, T_b):
-        """
+        r"""
 
         .. math::
-            \\int_{T_a}^{T_b}C_{\\mathrm{p}}^{\\mathrm{IG}}(T^\\star) \\mathrm{d}T^\\star
+            \int_{T_a}^{T_b}C_{\mathrm{p}}^{\mathrm{IG}}(T^\prime) \mathrm{d}T^\prime
             :label: cp_int
 
         :param T_a: start temperature in K
@@ -215,11 +217,11 @@ class CpStar(CpIdealGas):
 
     """
 
-    def __init__(self, T_ref: float=300., **kwargs):
+    def __init__(self, T_ref: float = 300., **kwargs):
         """
         :param kwargs: for CpIdealGas
         """
-        CpIdealGas.__init__(self, **kwargs)
+        CpIdealGas.__init__(self, Cp_units='dimensionless', T_units='dimensionless', **kwargs)
         self.T_ref = T_ref
         self.R = R_si_units
 
@@ -262,7 +264,123 @@ class CpStar(CpIdealGas):
         """
         return CpIdealGas.eval(self, T, f_sinh, f_cosh)
 
+
+class CpRawData:
+    """From raw data for Cp(T)
+    * fit to polynomial of temperature
+    * fit polynomial to antiderivative
+
+
+    :param T_min_fit: minimum temperature for fitting function [K]
+    :type T_min_fit: float, optional
+    :param T_max_fit: maximum temperature for fitting function [K]
+    :type T_max_fit: float, optional
+    :param poly_order: order of polynomial for fitting, defaults to 2
+    :type poly_order: int, optional
+    :param T_raw: raw temperatures in K
+    :type T_raw: list
+    :param Cp_raw: raw heat capacities in J/K/mol
+    :type Cp_raw: list
+    :param Cp_units: units for :math:`C_{\mathrm{p}}`, defaults to J/mol/K
+    :type Cp_units: str, optional
+    :param T_units: units for :math:`T`, defaults to K
+    :type T_units: str, optional
+
+    """
+
+    def __init__(self, T_raw: list, Cp_raw: list, T_min_fit: float = None, T_max_fit: float = None,
+                 poly_order: int = 2, T_units='K', Cp_units='J/mol/K'):
+        self.poly_order = poly_order
+        self.T_min_fit = T_min_fit
+        self.T_max_fit = T_max_fit
+        self.T_raw = T_raw
+        self.Cp_raw = Cp_raw
+        self.Cp_units = Cp_units
+        self.T_units = T_units
+
+        assert len(T_raw) == len(Cp_raw), 'Inconsistent input data'
+
+        if self.T_min_fit is None:
+            self.T_min_fit = min(T_raw)
+        if self.T_max_fit is None:
+            self.T_max_fit = max(T_raw)
+
+        indices_for_fit = [i for i in range(len(T_raw)) if self.T_min_fit <= T_raw[i] <= self.T_max_fit]
+        self.T_fit = [T_raw[i] for i in indices_for_fit]
+        self.Cp_fit = [Cp_raw[i] for i in indices_for_fit]
+
+        self.Cp_poly = np.poly1d(
+            np.polyfit(self.T_fit, self.Cp_fit, self.poly_order)
+        )
+        self.anti_derivative = np.polyint(self.Cp_poly)
+        self.R2 = self.get_R2()
+        logging.debug('R2 is {}'.format(self.R2))
+
+        if not (0.99 <= self.R2 <= 1.):
+            self.plot()
+            plt.show()
+            raise Exception('Fit is too poor (R2 not in (0.99,1)) too large! Try using a smaller temperature range for fitting '
+                            'and/or increasing the number of fitting points and polynomial degree'.format(self.R2))
+
+    def get_R2(self):
+        y_mean = np.mean(self.Cp_fit)
+        SS_tot = sum((y_i - y_mean)*(y_i - y_mean) for y_i in self.Cp_fit)
+        SS_res = sum((y_i - f_i)*(y_i-f_i) for y_i, f_i in zip(self.Cp_fit, self.Cp_poly(self.T_fit)))
+        return 1. - SS_res/SS_tot
+
     def plot(self, ax=None):
-        CpIdealGas.plot(self, ax)
-        ax.set_xlabel('$T^\\star$ [dimensionless]')
-        ax.set_ylabel('$C_\\mathrm{p}^\\star$ [dimensionless]')
+        if ax is None:
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+        approx_vals = self.Cp_poly(self.T_fit)
+        ax.plot(self.T_raw, self.Cp_raw, 'o', markerfacecolor='None', label='Raw Data')
+        ax.plot(self.T_fit, approx_vals, '--', markerfacecolor='None', label='Polynomial')
+        ax.legend()
+        ax.set_xlabel('Temperature [%s]' % self.T_units)
+        ax.set_ylabel('Cp [%s]' % self.Cp_units)
+
+    def get_max_percent_difference(self):
+        """Get largest percent difference"""
+        y_fit = self.Cp_poly(self.T_fit)
+        pd = [percent_difference(i, j) for i, j in zip(y_fit, self.Cp_fit)]
+        return max(pd)
+
+
+class CpStarRawData(CpRawData):
+    """From raw data for Cp
+
+        * convert to dimensionless units
+        * fit cp from CpRawData
+
+    :param T_ref: reference temperature in K
+    :type T_ref: float
+    :param R: gas constant, defaults to R_si_units
+    :type R: float, optional
+    :param T_min_fit: minimum temperature for fitting function [K]
+    :type T_min_fit: float, optional
+    :param T_max_fit: maximum temperature for fitting function [K]
+    :type T_max_fit: float, optional
+    :param poly_order: order of polynomial for fitting, defaults to 2
+    :type poly_order: int, optional
+    :param T_raw: raw temperatures in K
+    :type T_raw: list
+    :param Cp_raw: raw heat capacities in J/K/mol
+    :type Cp_raw: list
+
+    """
+
+    def __init__(self, T_raw: list, Cp_raw: list, T_ref: float, R: float=R_si_units,
+                 T_min_fit: float = None, T_max_fit: float = None, **kwargs):
+        T_raw = [i/T_ref for i in T_raw]
+        Cp_raw = [i/R for i in Cp_raw]
+        if T_min_fit is not None:
+            T_min_fit = T_min_fit / T_ref
+
+        if T_max_fit is not None:
+            T_max_fit = T_max_fit / T_ref
+
+        kwargs['Cp_units'] = 'dimensionless'
+        kwargs['T_units'] = 'dimensionless'
+        kwargs = {'T_min_fit': T_min_fit, 'T_max_fit': T_max_fit, **kwargs}
+
+        CpRawData.__init__(self, T_raw, Cp_raw, **kwargs)
