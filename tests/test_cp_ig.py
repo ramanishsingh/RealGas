@@ -75,6 +75,8 @@ class MyTestCase(unittest.TestCase):
         df = pd.read_csv('Cp_raw_data/MFI.tsv', delimiter='\t')
         I = CpRawData(df['T [K]'], df['Cp [J/mol/K]'], T_min_fit=200., T_max_fit=350.)
         J = CpStarRawData(df['T [K]'], df['Cp [J/mol/K]'], T_min_fit=200., T_max_fit=350., T_ref=200.)
+        I = CpRawData(T_raw=df['T [K]'], Cp_raw=df['Cp [J/mol/K]'], T_min_fit=200., T_max_fit=350.)
+        J = CpStarRawData(T_ref=200., T_raw=df['T [K]'], Cp_raw=df['Cp [J/mol/K]'], T_min_fit=200., T_max_fit=350.)
 
 
 if __name__ == '__main__':

@@ -18,7 +18,7 @@ Welcome to SciThermo's documentation!
    cubic
    thermal_conductivity
    viscosity
-   zreferences
+   zreferences.rst
 
 
 Indices and tables
