@@ -212,12 +212,12 @@ class CpStar(CpIdealGas):
         \end{align}
 
 
-    :param T_ref: reference temperature [K] for dimensionless computations, defaults to 300 K
-    :type T_ref: float, optional
+    :param T_ref: reference temperature [K] for dimensionless computations
+    :type T_ref: float
 
     """
 
-    def __init__(self, T_ref: float = 300., **kwargs):
+    def __init__(self, T_ref: float, **kwargs):
         """
         :param kwargs: for CpIdealGas
         """

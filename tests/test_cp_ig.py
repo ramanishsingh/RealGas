@@ -39,7 +39,7 @@ class MyTestCase(unittest.TestCase):
     def test_cp_star_Tmin(self):
 
         for i in compounds_to_test:
-            I = CpStar(compound_name=i, **self.kwargs)
+            I = CpStar(compound_name=i, T_ref=300., **self.kwargs)
             self.assertTrue(
                 percent_difference(I.Cp_Tmin, I.eval(I.T_min)) < self.tol
             )
@@ -47,7 +47,7 @@ class MyTestCase(unittest.TestCase):
     def test_cp_star_Tmax(self):
 
         for i in compounds_to_test:
-            I = CpStar(compound_name=i, **self.kwargs)
+            I = CpStar(compound_name=i, T_ref=300., **self.kwargs)
             self.assertTrue(
                 percent_difference(I.Cp_Tmax, I.eval(I.T_max)) < self.tol
             )
@@ -61,7 +61,7 @@ class MyTestCase(unittest.TestCase):
 
         """
         for i in compounds_to_test:
-            I = CpStar(compound_name=i, **self.kwargs)
+            I = CpStar(compound_name=i, T_ref=300., **self.kwargs)
             J = CpIdealGas(compound_name=i, **self.kwargs)
             self.assertAlmostEqual(
                 I.R*I.T_ref*I.cp_integral(200./I.T_ref, 400./I.T_ref), J.cp_integral(200., 400)
