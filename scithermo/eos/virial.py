@@ -47,6 +47,7 @@ class Virial:
         raise NotImplementedError
 
     def hat_phi_i_expr(self, *args):
+        """expression for fugacity coefficient"""
         return self.exp(self.ln_hat_phi_i_expr(*args))
 
 
@@ -187,7 +188,7 @@ class BinarySecondVirial(CriticalConstants, Virial):
     """
     def __init__(self,
                  i_kwargs = None, j_kwargs=None,
-                 k_ij = 0., pow: callable=np.power):
+                 k_ij = 0., pow: callable=np.power, exp: callable=np.exp):
         """
 
         :param i_kwargs: kwargs for component i passed to critical constants
@@ -199,7 +200,7 @@ class BinarySecondVirial(CriticalConstants, Virial):
             j_kwargs = {}
         self.i = CriticalConstants(**i_kwargs)
         self.j = CriticalConstants(**j_kwargs)
-        Virial.__init__(self, pow)
+        Virial.__init__(self, pow, exp)
         assert self.i.cas_number != self.j.cas_number, 'Errors anticipated when cas numbers are equal if other properties are not'
 
         self.k_ij = k_ij
