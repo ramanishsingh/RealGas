@@ -1,5 +1,5 @@
 from scithermo.critical_constants import CriticalConstants
-from shared.util import percent_difference
+from chem_util.math import percent_difference
 import matplotlib.pyplot as plt
 import numpy as np
 

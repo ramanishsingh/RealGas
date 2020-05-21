@@ -1,4 +1,4 @@
-from shared.util import percent_difference
+from chem_util.math import percent_difference
 from scithermo.chem_constants import R_si_units
 
 

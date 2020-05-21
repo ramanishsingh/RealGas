@@ -8,7 +8,7 @@ import numpy as np
 import logging
 logging.basicConfig(level=logging.DEBUG)
 from scithermo.cp import CpIdealGas, CpStar, CpRawData, CpStarRawData
-from shared.util import percent_difference
+from chem_util.math import percent_difference
 
 compounds_to_test = ['Butane', 'Carbon dioxide', 'Carbon monoxide',
                      'Propane', 'Propylene', 'Water']
@@ -49,7 +49,7 @@ def test_cp_raw():
     """Test getting cp and fitting from file for units and dimensionless versions
     The code automatically fits Cp and calculates goodness of fit and will fail if fit is not good enough
     """
-    from shared.io import read_csv
+    from chem_util.io import read_csv
     df = read_csv('tests/Cp_raw_data/MFI.tsv', delimiter='\t')
     for key in ('T [K]', 'Cp [J/mol/K]'):
         df[key] = list(map(float, df[key]))

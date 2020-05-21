@@ -3,7 +3,7 @@ from scithermo.eos.cubic import PengRobinson
 from scithermo.eos.virial import SecondVirial, BinarySecondVirial
 import numpy as np
 from scithermo.chem_constants import R_si_units
-from shared.util import percent_difference
+from chem_util.math import percent_difference
 
 tol = 0.1
 kwargs_i = {'T_c': 374.5, 'V_c': 9.44e-5, 'Z_c': 0.284, 'w': 0.0942, 'MW': 34.081,
