@@ -100,7 +100,7 @@ class Cubic(CriticalConstants):
                 \\frac{Z + \\sigma \\beta}{Z + \\epsilon \\beta}
             \\right)}
 
-        :param log: function to be used for natural logarithm, defaults to :ref:`np.log`
+        :param log: function to be used for natural logarithm, defaults to :meth:`np.log`
         :type log: callable, optional
         """
         if log is None:

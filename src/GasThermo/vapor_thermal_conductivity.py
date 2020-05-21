@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from shared.util import percent_difference
+from chem_util.math import percent_difference
 
 
 class KVapor:
@@ -141,7 +141,7 @@ class KVaporMixture:
     :type name_to_cas: dict[:attr:`components`, str]
     :param mixing_rule: mixing rule for calculation of viscosity, defaults to :code:`Simple`
     :type mixing_rule: str, optional
-    :param pure: pure component viscosity info, obtained rom  :ref:`GasThermo.vapor_viscosity.MuVapor`
+    :param pure: pure component viscosity info, obtained rom  :class:`src.GasThermo.vapor_viscosity.MuVapor`
     :type pure: dict[:attr:`components`, MuVapor]
     """
     def __init__(self, name_to_cas: dict, mixing_rule='Simple'):

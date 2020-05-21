@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from shared.util import percent_difference
+from chem_util.math import percent_difference
 
 
 class MuVapor:
