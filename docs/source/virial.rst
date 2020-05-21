@@ -1,11 +1,11 @@
 Virial Equation of State
 ========================
 
-.. autoclass:: scithermo.eos.virial.Virial
+.. autoclass:: src.GasThermo.eos.virial.Virial
     :members:
 
-.. autoclass:: scithermo.eos.virial.SecondVirial
+.. autoclass:: src.GasThermo.eos.virial.SecondVirial
     :members:
 
-.. autoclass:: scithermo.eos.virial.BinarySecondVirial
+.. autoclass:: src.GasThermo.eos.virial.BinarySecondVirial
     :members:

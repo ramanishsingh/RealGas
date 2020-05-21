@@ -1,8 +1,8 @@
 Critical Properties
 ===================
 
-.. automodule:: scithermo.critical_constants
+.. automodule:: src.GasThermo.critical_constants
    :members:
 
-.. autoclass:: scithermo.critical_constants.CriticalConstants
+.. autoclass:: src.GasThermo.critical_constants.CriticalConstants
     :members:

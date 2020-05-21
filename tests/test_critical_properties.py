@@ -1,8 +1,8 @@
-from scithermo.critical_constants import CriticalConstants
-from scithermo.eos.cubic import PengRobinson
-from scithermo.eos.virial import SecondVirial, BinarySecondVirial
+from src.GasThermo.critical_constants import CriticalConstants
+from src.GasThermo.eos.cubic import PengRobinson
+from src.GasThermo import SecondVirial, BinarySecondVirial
 import numpy as np
-from scithermo.chem_constants import R_si_units
+from src.GasThermo.chem_constants import R_si_units
 from chem_util.math import percent_difference
 
 tol = 0.1

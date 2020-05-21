@@ -17,9 +17,9 @@ sys.path.insert(0, os.path.abspath('../../'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'SciThermo'
-copyright = '2020, Robert F. DeJaco'
-author = 'Robert F. DeJaco'
+project = 'GasThermo'
+copyright = '2020, Robert F. De Jaco'
+author = 'Robert F. De Jaco'
 
 # The full version, including alpha/beta/rc tags
 release = 'v0.0.1'

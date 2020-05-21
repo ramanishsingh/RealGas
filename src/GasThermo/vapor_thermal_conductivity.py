@@ -44,7 +44,7 @@ class KVapor:
     def __init__(self, dippr_no: str = None, compound_name: str = None, cas_number: str = None,
                  T_min_fit: float = None, T_max_fit: float = None, n_points_fit: int = 1000,
                  poly_order: int = 2):
-        from scithermo import os, ROOT_DIR
+        from src.GasThermo import os, ROOT_DIR
         file = os.path.join(ROOT_DIR, 'vapor_thermal_conductivity.csv')
         my_header = [
             'Cmpd. no.', 'Name', 'Formula', 'CAS no.', 'Mol. wt. [g/mol]',
@@ -141,7 +141,7 @@ class KVaporMixture:
     :type name_to_cas: dict[:attr:`components`, str]
     :param mixing_rule: mixing rule for calculation of viscosity, defaults to :code:`Simple`
     :type mixing_rule: str, optional
-    :param pure: pure component viscosity info, obtained rom  :ref:`scithermo.vapor_viscosity.MuVapor`
+    :param pure: pure component viscosity info, obtained rom  :ref:`GasThermo.vapor_viscosity.MuVapor`
     :type pure: dict[:attr:`components`, MuVapor]
     """
     def __init__(self, name_to_cas: dict, mixing_rule='Simple'):

@@ -1,5 +1,5 @@
-from scithermo.critical_constants import CriticalConstants
-from scithermo.chem_constants import R_si_units
+from src.GasThermo.critical_constants import CriticalConstants
+from src.GasThermo.chem_constants import R_si_units
 import numpy as np
 import matplotlib.pyplot as plt
 

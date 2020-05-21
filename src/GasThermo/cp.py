@@ -2,7 +2,7 @@ import numpy as np
 import logging
 import matplotlib.pyplot as plt
 from chem_util.math import percent_difference
-from scithermo.chem_constants import R_si_units
+from src.GasThermo.chem_constants import R_si_units
 
 
 class CpIdealGas:
@@ -59,7 +59,7 @@ class CpIdealGas:
     def __init__(self, dippr_no: str = None, compound_name: str = None, cas_number: str = None,
                  T_min_fit: float = None, T_max_fit: float = None, n_points_fit: int = 1000,
                  poly_order: int = 2, T_units='K', Cp_units='J/mol/K'):
-        from scithermo import os, ROOT_DIR
+        from src.GasThermo import os, ROOT_DIR
         file = os.path.join(ROOT_DIR, 'cp_ig.csv')
         my_header = [
             'Cmpd. no.', 'Name', 'Formula', 'CAS no.', 'Mol. wt. [g/mol]',

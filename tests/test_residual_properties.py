@@ -1,6 +1,6 @@
 import numpy as np
-from scithermo.eos.cubic import PengRobinson, RedlichKwong, SoaveRedlichKwong
-from scithermo.eos.virial import SecondVirial, BinarySecondVirial
+from src.GasThermo.eos.cubic import PengRobinson
+from src.GasThermo import SecondVirial, BinarySecondVirial
 from .test_cp_ig import compounds_to_test
 
 

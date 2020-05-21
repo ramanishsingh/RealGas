@@ -1,4 +1,4 @@
-from scithermo.critical_constants import CriticalConstants
+from src.GasThermo.critical_constants import CriticalConstants
 from chem_util.math import percent_difference
 import matplotlib.pyplot as plt
 import numpy as np

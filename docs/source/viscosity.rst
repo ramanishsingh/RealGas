@@ -2,10 +2,10 @@ Vapor Viscosity
 ===============
 
 
-.. automodule:: scithermo.vapor_viscosity
+.. automodule:: src.GasThermo.vapor_viscosity
 
-.. autoclass:: scithermo.vapor_viscosity.MuVapor
+.. autoclass:: src.GasThermo.vapor_viscosity.MuVapor
     :members:
 
-.. autoclass:: scithermo.vapor_viscosity.MuVaporMixture
+.. autoclass:: src.GasThermo.vapor_viscosity.MuVaporMixture
     :members:
