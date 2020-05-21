@@ -1,7 +1,7 @@
 import numpy as np
 import logging
 import matplotlib.pyplot as plt
-from scithermo.util import percent_difference
+from shared.util import percent_difference
 from scithermo.chem_constants import R_si_units
 
 
@@ -122,8 +122,8 @@ class CpIdealGas:
         self.anti_derivative = np.polyint(self.Cp_poly)
 
         if self.get_numerical_percent_difference() > 0.001:
-            self.plot()
-            plt.show()
+            fig, ax = self.plot()
+            fig.savefig('error_cp.png')
             raise Exception('Error in integration is too large! Try using a smaller temperature range for fitting '
                             'and/or increasing the number of fitting points and polynomial degree')
 
@@ -141,9 +141,10 @@ class CpIdealGas:
         C5_T = self.C5 / T
         return self.C1 + self.C2 * (C3_T / f_sinh(C3_T)) + self.C4 * (C5_T / f_cosh(C5_T)) * (C5_T / f_cosh(C5_T))
 
-    def plot(self, ax=None):
-        if ax is None:
+    def plot(self, fig= None, ax=None):
+        if fig is None:
             fig = plt.figure()
+        if ax is None:
             ax = fig.add_subplot(111)
         T_all = np.linspace(self.T_min, self.T_max, 1000)
         vals = self.eval(T_all)
@@ -153,6 +154,7 @@ class CpIdealGas:
         ax.legend()
         ax.set_xlabel('Temperature [%s]' % self.T_units)
         ax.set_ylabel('CpIg [%s]' % self.Cp_units)
+        return fig, ax
 
     def cp_integral(self, T_a, T_b):
         r"""
@@ -306,6 +308,7 @@ class CpRawData:
             self.T_max_fit = max(T_raw)
 
         indices_for_fit = [i for i in range(len(T_raw)) if self.T_min_fit <= T_raw[i] <= self.T_max_fit]
+        assert len(indices_for_fit) > 1, 'Not enough indices to fit within temperature range of raw data({},{})'.format(min(T_raw), max(T_raw))
         self.T_fit = [T_raw[i] for i in indices_for_fit]
         self.Cp_fit = [Cp_raw[i] for i in indices_for_fit]
 
@@ -317,10 +320,14 @@ class CpRawData:
         logging.debug('R2 is {}'.format(self.R2))
 
         if not (0.99 <= self.R2 <= 1.):
-            self.plot()
+            fig, ax = self.plot()
+            fig.savefig('cp_error.png')
             plt.show()
-            raise Exception('Fit is too poor (R2 not in (0.99,1)) too large! Try using a smaller temperature range for fitting '
+            raise Exception('Fit is too poor (R2={} not in (0.99,1)) too large! Try using a smaller temperature range for fitting '
                             'and/or increasing the number of fitting points and polynomial degree'.format(self.R2))
+
+    def eval(self, T):
+        return self.Cp_poly(T)
 
     def get_R2(self):
         y_mean = np.mean(self.Cp_fit)
@@ -328,9 +335,10 @@ class CpRawData:
         SS_res = sum((y_i - f_i)*(y_i-f_i) for y_i, f_i in zip(self.Cp_fit, self.Cp_poly(self.T_fit)))
         return 1. - SS_res/SS_tot
 
-    def plot(self, ax=None):
-        if ax is None:
+    def plot(self, fig=None, ax=None):
+        if fig is None:
             fig = plt.figure()
+        if ax is None:
             ax = fig.add_subplot(111)
         approx_vals = self.Cp_poly(self.T_fit)
         ax.plot(self.T_raw, self.Cp_raw, 'o', markerfacecolor='None', label='Raw Data')
@@ -338,6 +346,7 @@ class CpRawData:
         ax.legend()
         ax.set_xlabel('Temperature [%s]' % self.T_units)
         ax.set_ylabel('Cp [%s]' % self.Cp_units)
+        return fig, ax
 
     def get_max_percent_difference(self):
         """Get largest percent difference"""

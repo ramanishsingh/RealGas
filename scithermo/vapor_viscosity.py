@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scithermo.util import percent_difference
+from shared.util import percent_difference
 
 
 class MuVapor:
@@ -116,9 +116,10 @@ class MuVapor:
             1. + self.C3/T + self.C4/T/T
         )
 
-    def plot(self, ax=None):
-        if ax is None:
+    def plot(self, fig=None, ax=None):
+        if fig is None:
             fig = plt.figure()
+        if ax is None:
             ax = fig.add_subplot(111)
         T_all = np.linspace(self.T_min, self.T_max, 1000)
         vals = self.eval(T_all)
@@ -128,6 +129,7 @@ class MuVapor:
         ax.legend()
         ax.set_xlabel('Temperature [K]')
         ax.set_ylabel('Viscosity [%s]' % self.units)
+        return fig, ax
 
 
 class MuVaporMixture:
@@ -140,9 +142,9 @@ class MuVaporMixture:
     :param pure: pure component viscosity info, obtained rom  :ref:`scithermo.vapor_viscosity.MuVapor`
     :type pure: dict[:attr:`components`, MuVapor]
     """
-    def __init__(self, name_to_cas: dict, mixing_rule='Herning Zipperer'):
+    def __init__(self, name_to_cas: dict=None, mixing_rule='Herning Zipperer', **kwargs):
         self.pure = {
-            key: MuVapor(cas_number=val) for key, val in name_to_cas.items()
+            key: MuVapor(cas_number=val, compound_name=key, **kwargs) for key, val in name_to_cas.items()
         }
         self.mixing_rule = mixing_rule
 

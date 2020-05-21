@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scithermo.util import percent_difference
+from shared.util import percent_difference
 
 
 class KVapor:
@@ -139,7 +139,7 @@ class KVaporMixture:
 
     :param name_to_cas: mapping of chemical name to cas registry number
     :type name_to_cas: dict[:attr:`components`, str]
-    :param mixing_rule: mixing rule for calculation of viscosity, defaults to Herning Zipperer
+    :param mixing_rule: mixing rule for calculation of viscosity, defaults to :code:`Simple`
     :type mixing_rule: str, optional
     :param pure: pure component viscosity info, obtained rom  :ref:`scithermo.vapor_viscosity.MuVapor`
     :type pure: dict[:attr:`components`, MuVapor]
