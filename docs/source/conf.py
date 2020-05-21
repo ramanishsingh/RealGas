@@ -17,12 +17,12 @@ sys.path.insert(0, os.path.abspath('../../'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'GasThermo'
+project = 'gasthermo'
 copyright = '2020, Robert F. De Jaco'
 author = 'Robert F. De Jaco'
 
 # The full version, including alpha/beta/rc tags
-release = 'v0.0.1'
+release = '0.0.4'
 
 
 # -- General configuration ---------------------------------------------------

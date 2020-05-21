@@ -2,13 +2,13 @@ Heat Capacity
 =============
 
 
-.. automodule:: src.GasThermo.cp
+.. automodule:: src.gasthermo.cp
 
-.. autoclass:: src.GasThermo.cp.CpIdealGas
+.. autoclass:: src.gasthermo.cp.CpIdealGas
     :members:
 
-.. autoclass:: src.GasThermo.cp.CpStar
+.. autoclass:: src.gasthermo.cp.CpStar
     :members:
 
-.. autoclass:: src.GasThermo.cp.CpRawData
+.. autoclass:: src.gasthermo.cp.CpRawData
     :members:

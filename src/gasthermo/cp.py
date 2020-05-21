@@ -175,7 +175,7 @@ class CpIdealGas:
         return si.quad(self.eval, T_a, T_b)
 
     def get_numerical_percent_difference(self):
-        """Calculate the percent difference with numerical integration obtained by :ref:`scipy`"""
+        """Calculate the percent difference with numerical integration"""
         integral_poly_fit = self.cp_integral(self.T_min_fit, self.T_max_fit)
         integral_numerical, err_numerical = self.numerical_integration(self.T_min_fit, self.T_max_fit)
         return percent_difference(integral_poly_fit, integral_numerical)

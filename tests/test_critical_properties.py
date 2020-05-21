@@ -1,6 +1,6 @@
-from src.GasThermo.critical_constants import CriticalConstants
-from src.GasThermo.eos.cubic import PengRobinson
-from src.GasThermo.eos.virial import SecondVirial, BinarySecondVirial
+from src.gasthermo.critical_constants import CriticalConstants
+from src.gasthermo.eos.cubic import PengRobinson
+from src.gasthermo.eos.virial import SecondVirial, BinarySecondVirial
 import numpy as np
 from chem_util.chem_constants import gas_constant
 from chem_util.math import percent_difference

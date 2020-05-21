@@ -164,11 +164,14 @@ class BinarySecondVirial(CriticalConstants, Virial):
     r"""Second virial with combining rules from :cite:`Prausnitz1986`
 
     .. math::
-        \begin{align}
-            w_{ij} &= \frac{w_i + w_j}{2} \\
-            T_{\mathrm{c},ij} &= \sqrt{T_{\mathrm{c},i}T_{\mathrm{c},j}}(1-k_{ij}) :label:eq_Tcij\\
-            P_{\mathrm{c},ij} &= \frac{Z_{\mathrm{c},ij}RT_{\mathrm{c},ij}}{V_{\mathrm{c},ij}} \\
-        \end{align}
+        w_{ij} = \frac{w_i + w_j}{2}
+
+    .. math::
+        T_{\mathrm{c},ij} = \sqrt{T_{\mathrm{c},i}T_{\mathrm{c},j}}(1-k_{ij})
+        :label: eq_Tcij
+
+    .. math::
+        P_{\mathrm{c},ij} = \frac{Z_{\mathrm{c},ij}RT_{\mathrm{c},ij}}{V_{\mathrm{c},ij}}
 
     where
 

@@ -1,14 +1,14 @@
 Cubic Equation of State
 =======================
 
-.. autoclass:: src.GasThermo.eos.cubic.Cubic
+.. autoclass:: src.gasthermo.eos.cubic.Cubic
     :members:
 
-.. autoclass:: src.GasThermo.eos.cubic.RedlichKwong
+.. autoclass:: src.gasthermo.eos.cubic.RedlichKwong
     :members:
 
-.. autoclass:: src.GasThermo.eos.cubic.SoaveRedlichKwong
+.. autoclass:: src.gasthermo.eos.cubic.SoaveRedlichKwong
     :members:
 
-.. autoclass:: src.GasThermo.eos.cubic.PengRobinson
+.. autoclass:: src.gasthermo.eos.cubic.PengRobinson
     :members:
