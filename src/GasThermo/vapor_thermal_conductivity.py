@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from chem_util.math import percent_difference
+from . import os, ROOT_DIR
 
 
 class KVapor:
@@ -44,7 +45,6 @@ class KVapor:
     def __init__(self, dippr_no: str = None, compound_name: str = None, cas_number: str = None,
                  T_min_fit: float = None, T_max_fit: float = None, n_points_fit: int = 1000,
                  poly_order: int = 2):
-        from src.GasThermo import os, ROOT_DIR
         file = os.path.join(ROOT_DIR, 'vapor_thermal_conductivity.csv')
         my_header = [
             'Cmpd. no.', 'Name', 'Formula', 'CAS no.', 'Mol. wt. [g/mol]',

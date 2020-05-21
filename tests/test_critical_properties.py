@@ -2,18 +2,18 @@ from src.GasThermo.critical_constants import CriticalConstants
 from src.GasThermo.eos.cubic import PengRobinson
 from src.GasThermo.eos.virial import SecondVirial, BinarySecondVirial
 import numpy as np
-from src.GasThermo.chem_constants import R_si_units
+from chem_util.chem_constants import gas_constant
 from chem_util.math import percent_difference
 
 tol = 0.1
 kwargs_i = {'T_c': 374.5, 'V_c': 9.44e-5, 'Z_c': 0.284, 'w': 0.0942, 'MW': 34.081,
                  'compound_name': 'H2S', 'cas_number': 'i'}
-kwargs_i['P_c'] = kwargs_i['Z_c'] * R_si_units * kwargs_i['T_c'] / kwargs_i['V_c']
+kwargs_i['P_c'] = kwargs_i['Z_c'] * gas_constant * kwargs_i['T_c'] / kwargs_i['V_c']
 kwargs_j = {
     'T_c': 191.4, 'V_c': 0.100, 'Z_c': 0.286, 'w': 0.0115, 'MW': 16.042,
     'compound_name': 'CH4', 'cas_number': 'j'
 }
-kwargs_j['P_c'] = kwargs_j['Z_c'] * R_si_units * kwargs_j['T_c'] / kwargs_j['V_c']
+kwargs_j['P_c'] = kwargs_j['Z_c'] * gas_constant * kwargs_j['T_c'] / kwargs_j['V_c']
 
 
 def test_input_custom():

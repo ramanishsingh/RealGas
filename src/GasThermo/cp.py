@@ -2,7 +2,8 @@ import numpy as np
 import logging
 import matplotlib.pyplot as plt
 from chem_util.math import percent_difference
-from src.GasThermo.chem_constants import R_si_units
+from chem_util.chem_constants import gas_constant
+from . import os, ROOT_DIR
 
 
 class CpIdealGas:
@@ -59,7 +60,6 @@ class CpIdealGas:
     def __init__(self, dippr_no: str = None, compound_name: str = None, cas_number: str = None,
                  T_min_fit: float = None, T_max_fit: float = None, n_points_fit: int = 1000,
                  poly_order: int = 2, T_units='K', Cp_units='J/mol/K'):
-        from src.GasThermo import os, ROOT_DIR
         file = os.path.join(ROOT_DIR, 'cp_ig.csv')
         my_header = [
             'Cmpd. no.', 'Name', 'Formula', 'CAS no.', 'Mol. wt. [g/mol]',
@@ -225,7 +225,7 @@ class CpStar(CpIdealGas):
         """
         CpIdealGas.__init__(self, Cp_units='dimensionless', T_units='dimensionless', **kwargs)
         self.T_ref = T_ref
-        self.R = R_si_units
+        self.R = gas_constant
 
         self.T_min = self.T_min / self.T_ref
         self.T_max = self.T_max / self.T_ref
@@ -363,7 +363,7 @@ class CpStarRawData(CpRawData):
 
     :param T_ref: reference temperature in K
     :type T_ref: float
-    :param R: gas constant, defaults to R_si_units
+    :param R: gas constant, defaults to si units
     :type R: float, optional
     :param T_min_fit: minimum temperature for fitting function [K]
     :type T_min_fit: float, optional
@@ -378,7 +378,7 @@ class CpStarRawData(CpRawData):
 
     """
 
-    def __init__(self, T_raw: list, Cp_raw: list, T_ref: float, R: float=R_si_units,
+    def __init__(self, T_raw: list, Cp_raw: list, T_ref: float, R: float=gas_constant,
                  T_min_fit: float = None, T_max_fit: float = None, **kwargs):
         T_raw = [i/T_ref for i in T_raw]
         Cp_raw = [i/R for i in Cp_raw]

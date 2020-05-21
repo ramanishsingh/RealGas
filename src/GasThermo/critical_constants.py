@@ -1,5 +1,6 @@
 from chem_util.math import percent_difference
-from src.GasThermo.chem_constants import R_si_units
+from chem_util.chem_constants import gas_constant
+from . import os, ROOT_DIR
 
 
 class CriticalConstants:
@@ -31,13 +32,12 @@ class CriticalConstants:
     """
 
     def __init__(self, dippr_no: str = None, compound_name: str = None, cas_number: str = None, **kwargs):
-        from src.GasThermo import os, ROOT_DIR
         file = os.path.join(ROOT_DIR, 'critical_constants.csv')
         my_header = [
             'Cmpd. no.', 'Name', 'Formula', 'CAS no.', 'Mol. wt. [g/mol]',
             'Tc [K]', 'Pc [MPa]', 'Vc [m3/kmol]', 'Zc', 'Acentric factor'
         ]
-        self.R = R_si_units
+        self.R = gas_constant
         self.dippr_no = dippr_no
         self.compound_name = compound_name
         self.cas_number = cas_number

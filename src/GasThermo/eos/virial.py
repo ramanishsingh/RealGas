@@ -1,5 +1,5 @@
-from src.GasThermo.critical_constants import CriticalConstants
-from src.GasThermo.chem_constants import R_si_units
+from ..critical_constants import CriticalConstants
+from chem_util.chem_constants import gas_constant
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -16,7 +16,7 @@ class Virial:
     def __init__(self, pow: callable=np.power, exp: callable=np.exp):
         self.pow = pow
         self.exp = exp
-        self.R = R_si_units
+        self.R = gas_constant
 
     def B0_expr(self, T_r):
         return 0.083 - 0.422*self.pow(T_r, -1.6)
