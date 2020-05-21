@@ -1,7 +1,7 @@
 import numpy as np
 from src.GasThermo.eos.cubic import PengRobinson
-from src.GasThermo import SecondVirial, BinarySecondVirial
-from .test_cp_ig import compounds_to_test
+from src.GasThermo.eos.virial import SecondVirial, BinarySecondVirial
+from tests.test_cp_ig import compounds_to_test
 
 
 def test_virial():
