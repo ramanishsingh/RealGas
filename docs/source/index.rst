@@ -19,7 +19,7 @@ Welcome to GasThermo's documentation!
    cubic
    thermal_conductivity
    viscosity
-   zreferences.rst
+   zreferences
 
 
 Indices and tables
