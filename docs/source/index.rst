@@ -12,6 +12,7 @@ Welcome to GasThermo's documentation!
    :caption: Contents:
 
 
+   capabilities
    heat_capacity
    critical_properties
    virial
