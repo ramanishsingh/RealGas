@@ -1,7 +1,7 @@
-SciThermo
+GasThermo
 =========
 
-A package for obtaining thermodynamic properties and computing integrals.
+A package for obtaining gas-phase thermodynamic properties and computing integrals.
 Designed for integration with computational simulation environments.
 
 <p align="center"> 
@@ -17,7 +17,7 @@ A tutorial can be found [here](tutorial.ipynb)
 
 Documentation
 =============
-The online documentation is hosted at [read the docs](https://scithermo.readthedocs.io/en/master/).
+The online documentation is hosted at [read the docs](https://gasthermo.readthedocs.io/en/master/).
 
 Contributing
 ============
