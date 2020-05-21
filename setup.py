@@ -21,7 +21,7 @@ setuptools.setup(
         "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
         "Operating System :: OS Independent",
     ],
-    package_dir={'', 'src'},
+    package_dir={'': 'src'},
     python_requires='>=3.6',
     install_requires=["matplotlib==3.2.1", "numpy==1.18.4", "scipy==1.4.1", 'chem-util==0.0.4']
 )
