@@ -49,8 +49,8 @@ def test_cp_raw():
     """Test getting cp and fitting from file for units and dimensionless versions
     The code automatically fits Cp and calculates goodness of fit and will fail if fit is not good enough
     """
-    from solsac.io import read_csv
-    df = read_csv('tests/test_scithermo/Cp_raw_data/MFI.tsv', delimiter='\t')
+    from shared.io import read_csv
+    df = read_csv('tests/Cp_raw_data/MFI.tsv', delimiter='\t')
     for key in ('T [K]', 'Cp [J/mol/K]'):
         df[key] = list(map(float, df[key]))
 
