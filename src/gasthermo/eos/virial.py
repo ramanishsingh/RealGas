@@ -484,16 +484,31 @@ class MixingRule(Virial):
 
 
 class SecondVirialMixture(MixingRule):
-    r"""Second virial with
+    r"""Second virial with mixing rule from :class:`.MixingRule`
 
 
-    .. todo::
-        Add docs here of attributes
 
 
+    :param num_components: number of components
+    :type num_components: int
+    :param dippr_nos: dippr numbers of components
+    :type dippr_nos: typing.List[str]
+    :param compound_names: names of components
+    :type compound_names: typing.List[str]
+    :param cas_numbers: cas registry numbers
+    :type cas_numbers: typing.List[str]
+    :param MWs: molecular weights of component sin g/mol
+    :type MWs: typing.List[float]
+    :param P_cs: critical pressures of componets in Pa
+    :type P_cs: typing.List[float]
+    :param T_cs: critical temperatures of pure components in K
+    :type T_cs: typing.List[float]
+    :param V_cs: critical molar volumes of pure components in m**3/mol
+    :type V_cs: typing.List[float]
+    :param ws: accentric factors of components
+    :type ws: typing.List[float]
     :param k_ij: equation of state mixing rule in calculation of critical temperautre, see Equation :eq:`Tc_combine`. When :math:`i=j` and for chemical similar species, :math:`k_{ij}=0`. Otherwise, it is a small (usually) positive number evaluated from minimal :math:`PVT` data or, in the absence of data, set equal to zero.
-    :param cas_pairs: pairs of cas registry numbers, derived from cas_numbers calculated
-    :param other_cas: map from one cas number to other
+    :type k_ij: typing.List[typing.List[float]]
 
 
     .. note::
@@ -515,46 +530,54 @@ class SecondVirialMixture(MixingRule):
                  pow: callable = np.power, exp: callable = np.exp):
         MixingRule.__init__(self, pow, exp)
         self.num_components = 0
-        self.dippr_nos = dippr_nos
-        if self.dippr_nos is not None:
-            self.num_components = len(self.dippr_nos)
-        self.compound_names = compound_names
-        if self.compound_names is not None:
-            self.num_components = len(self.compound_names)
-        self.cas_numbers = cas_numbers
-        if self.cas_numbers is not None:
-            self.num_components = len(self.compound_names)
-        if self.dippr_nos is None and self.compound_names is None and self.cas_numbers is None:
-            assert self.MWs is not None and self.P_cs is not None, 'Incorrect input'
-        self.MWs = MWs
+        if dippr_nos is not None:
+            self.num_components = len(dippr_nos)
+        if compound_names is not None:
+            self.num_components = len(compound_names)
+        if cas_numbers is not None:
+            self.num_components = len(compound_names)
+        if dippr_nos is None and compound_names is None and cas_numbers is None:
+            assert MWs is not None and P_cs is not None, 'Incorrect input'
         if self.num_components == 0:
-            self.num_components = len(self.MWs)
-        self.P_cs = P_cs
-        self.V_cs = V_cs
-        self.Z_cs = Z_cs
-        self.T_cs = T_cs
-        self.ws = ws
-        self.k_ij = k_ij
+            self.num_components = len(MWs)
+
         assert self.num_components > 0, 'Inconsistent input--no components found!'
-        if self.dippr_nos is None:
-            self.dippr_nos = [None for i in range(self.num_components)]
-        if self.compound_names is None:
-            self.compound_names = [None for i in range(self.num_components)]
-        if self.cas_numbers is None:
-            self.cas_numbers = [None for i in range(self.num_components)]
-        if self.MWs is None:
-            self.MWs = [None for i in range(self.num_components)]
-        if self.P_cs is None:
-            self.P_cs = [None for i in range(self.num_components)]
-        if self.V_cs is None:
-            self.V_cs = [None for i in range(self.num_components)]
-        if self.T_cs is None:
-            self.T_cs = [None for i in range(self.num_components)]
-        if self.Z_cs is None:
-            self.Z_cs = [None for i in range(self.num_components)]
-        if self.ws is None:
-            self.ws = [None for i in range(self.num_components)]
-        if self.k_ij is None:
+        if dippr_nos is None:
+            dippr_nos = [None for i in range(self.num_components)]
+        if compound_names is None:
+            compound_names = [None for i in range(self.num_components)]
+        if cas_numbers is None:
+            cas_numbers = [None for i in range(self.num_components)]
+        if MWs is None:
+            MWs = [None for i in range(self.num_components)]
+        if P_cs is None:
+            P_cs = [None for i in range(self.num_components)]
+        if V_cs is None:
+            V_cs = [None for i in range(self.num_components)]
+        if T_cs is None:
+            T_cs = [None for i in range(self.num_components)]
+        if Z_cs is None:
+            Z_cs = [None for i in range(self.num_components)]
+        if ws is None:
+            ws = [None for i in range(self.num_components)]
+
+        self.critical_constants = []
+        for i in range(self.num_components):
+            self.critical_constants.append(
+                CriticalConstants(
+                    dippr_no=dippr_nos[i],
+                    compound_name=compound_names[i],
+                    cas_number=cas_numbers[i],
+                    MW=MWs[i],
+                    P_c=P_cs[i],
+                    V_c=V_cs[i],
+                    Z_c=Z_cs[i],
+                    T_c=T_cs[i],
+                    w=ws[i]
+                )
+            )
+
+        if k_ij is None:
             self.k_ij = [[0. for i in range(self.num_components)] for j in range(self.num_components)]
         if isinstance(self.k_ij, float) and self.num_components == 2:
             value = self.k_ij
@@ -563,22 +586,7 @@ class SecondVirialMixture(MixingRule):
                 for j in range(self.num_components):
                     if i != j:
                         self.k_ij[i][j] = value
-
-        self.critical_constants = []
-        for i in range(self.num_components):
-            self.critical_constants.append(
-                CriticalConstants(
-                    dippr_no=self.dippr_nos[i],
-                    compound_name=self.compound_names[i],
-                    cas_number=self.cas_numbers[i],
-                    MW=self.MWs[i],
-                    P_c=self.P_cs[i],
-                    V_c=self.V_cs[i],
-                    Z_c=self.Z_cs[i],
-                    T_c=self.T_cs[i],
-                    w=self.ws[i]
-                )
-            )
+        self.dippr_nos = [I.dippr_no for I in self.critical_constants]
         self.compound_names = [I.compound_name for I in self.critical_constants]
         self.cas_numbers = [I.cas_number for I in self.critical_constants]
         self.ws = [I.w for I in self.critical_constants]

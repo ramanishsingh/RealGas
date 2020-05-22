@@ -1,6 +1,8 @@
 Cubic Equation of State
 =======================
 
+.. automodule:: src.gasthermo.eos.cubic
+
 .. autoclass:: src.gasthermo.eos.cubic.Cubic
     :members:
 
