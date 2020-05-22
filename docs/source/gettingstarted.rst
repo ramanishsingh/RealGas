@@ -10,8 +10,6 @@ The package can be installed via :code:`pip` as follows
 
     pip install GasThermo
 
-Examples
---------
 
-.. automodule:: gasthermo
+.. include:: ../../gasthermo/examples.rst
 

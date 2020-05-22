@@ -24,39 +24,6 @@ class CpIdealGas:
     Instead, the function is fit to a polynomial within a range of interest
     so that it can be integrated by using an antiderivative that is a polynomial.
 
-    Automatically tries to raise errors if fit is not good enough:
-
-
-    >>> from gasthermo.cp import CpIdealGas
-    >>> I = CpIdealGas(compound_name='Methane')
-    Traceback (most recent call last):
-        ...
-    Exception: Fit is too poor (not in (0.99,1)) too large!
-    Try using a smaller temperature range for fitting
-    and/or increasing the number of fitting points and polynomial degree.
-    See error path in error-*dir
-
-    This will lead to an error directory with a figure saved in it that looks like the following:
-
-    .. image:: error_cp.png
-
-    Usually, we wont need an accurate function over this entire temperature range.
-    Lets imagine that we are interested instead in a temperature interval
-    between 200 and 600 K.
-    In this case
-
-    >>> I = CpIdealGas(compound_name='Methane', T_min_fit=200., T_max_fit=600.)
-
-    And then we can save the results to a file
-
-    >>> fig = plt.figure()
-    >>> fig, ax = I.plot(fig=fig)
-    >>> fig.savefig('docs/source/cp-methane-fixed.png')
-
-    Which leads to a much better fit, as shown below
-
-    .. image:: cp-methane-fixed.png
-
 
     :param dippr_no: dippr_no of compound by DIPPR table, defaults to None
     :type dippr_no: str, optional
@@ -308,7 +275,7 @@ class CpStar(CpIdealGas):
 
 
 class CpRawData:
-    """Obtain heat capacity relationships from raw data
+    r"""Obtain heat capacity relationships from raw data
 
     Using input raw data
     # fit to polynomial of temperature
