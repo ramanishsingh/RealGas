@@ -11,10 +11,6 @@ Designed for integration with computational simulation environments.
     />
 </p>
 
-Tutorial
-========
-A tutorial can be found [here](tutorial.ipynb)
-
 Documentation
 =============
 The online documentation is hosted at [read the docs](https://gasthermo.readthedocs.io/en/master/).
