@@ -119,6 +119,97 @@ and
 .. math::
     \delta_{ii} = 0
 
+Residual Partial Molar Properties
+---------------------------------
+The partial molar residual free energy of component *k* is
+
+.. math::
+    \frac{\bar{G}^\text{R}_k}{RT} = \ln{\hat{\phi}_k} = \frac{P}{RT}\left[B_{kk} + \frac{1}{2}\sum_i\sum_jy_iy_j\left(2\delta_{ik} - \delta_{ij}\right)\right]
+    :label: barGiR
+
+
+The partial molar residual enthalpy of component *k* is
+
+
+.. math::
+    \begin{align}
+        \frac{\bar{H}^\mathrm{R}_k}{RT} &= -T \left(\frac{\partial \ln\hat{\phi}_k}{\partial T}\right)_{P,y} \\
+                             &= - \frac{T}{T_c} \left(\frac{\partial \ln\hat{\phi}_k}{\partial T_r}\right)_{P,y} \\
+                             &= - \frac{T}{T_c}\left\{
+                                \frac{P}{RT}\left[
+                                    \frac{\partial B_{kk}}{\partial T_r}
+                                     + \frac{1}{2}\sum_i\sum_j y_iy_j\left(
+                                                    2\frac{\partial \delta_{ik}}{\partial T_r}
+                                                    - \frac{\partial \delta_{ij}}{\partial T_r}
+                                                    \right)
+                                    \right]
+                                - \frac{T_c\ln\hat{\phi}_i}{T}
+                             \right\}
+    \end{align}
+
+where :math:`\frac{\partial \delta_{ij}}{\partial T_r}` is given by :eq:`eq_d_dij`
+so that we obtain
+
+.. math::
+    \frac{\bar{H}^\mathrm{R}_k}{RT} = - \frac{P}{RT_\text{c}}\left[
+                                    \frac{\partial B_{kk}}{\partial T_r}
+                                     + \frac{1}{2}\sum_i\sum_j y_iy_j\left(
+                                                    2\frac{\partial \delta_{ik}}{\partial T_r}
+                                                    - \frac{\partial \delta_{ij}}{\partial T_r}
+                                                    \right)
+                                    \right]
+                                + \ln\hat{\phi}_i
+    :label: barHiR
+
+Since
+
+.. math::
+    G^\mathrm{R} = H^\mathrm{R} - T S^\mathrm{R}
+
+In terms of partial molar properties, then
+
+.. math::
+    \begin{align}
+        \bar{S}_i^\mathrm{R} &= \frac{\bar{H}_i^\mathrm{R} - \bar{G}_i^\mathrm{R}}{T} \\
+        \frac{\bar{S}_i^\mathrm{R}}{R} &= \frac{\bar{H}_i^\mathrm{R}}{RT} - \frac{\bar{G}_i^\mathrm{R}}{RT} \\
+    \end{align}
+
+By comparing Equation :eq:`barGiR` and :eq:`barHiR` it is observed that
+
+.. math::
+    \frac{\bar{S}_k^\mathrm{R}}{R} = - \frac{P}{RT_\text{c}}\left[
+                                    \frac{\partial B_{kk}}{\partial T_r}
+                                     + \frac{1}{2}\sum_i\sum_j y_iy_j\left(
+                                                    2\frac{\partial \delta_{ik}}{\partial T_r}
+                                                    - \frac{\partial \delta_{ij}}{\partial T_r}
+                                                    \right)
+                                    \right]
+    :label: barSiR
+
+where :math:`\frac{\partial \delta_{ij}}{\partial T_r}` is given by :eq:`eq_d_dij`
+
+
+
+The partial molar residual volume of component *i* is calculated as
+
+.. math::
+    \begin{align}
+        \frac{\bar{V}_k^\mathrm{R}}{RT} &= \left(\frac{\partial \ln\hat{\phi}_i}{\partial P}\right)_{T,y}\\
+            &= \frac{\partial}{\partial P}\left\{\frac{P}{RT}\left[B_{kk} + \frac{1}{2}\sum_i\sum_jy_iy_j\left(2\delta_{ik} - \delta_{ij}\right)\right]\right\}
+    \end{align}
+
+which simplifies to
+
+.. math::
+    \frac{\bar{V}_k^\mathrm{R}}{RT} = \frac{1}{RT}\left[B_{kk} + \frac{1}{2}\sum_i\sum_jy_iy_j\left(2\delta_{ik} - \delta_{ij}\right)\right]
+    :label: barViR
+
+from which we obtain the intuitive result of
+
+.. math::
+    \bar{V}_k^\mathrm{R} = B_{kk} + \frac{1}{2}\sum_i\sum_jy_iy_j\left(2\delta_{ik} - \delta_{ij}\right)
+
+
 """
 
 from ..critical_constants import CriticalConstants
@@ -569,8 +660,8 @@ class SecondVirialMixture(MixingRule):
         """
         return P / R / T * (
                 self.B_ij_expr(k, k, T)
-            + 1./2.*sum(
-            ys[i]*ys[j]*(2.*self.d_ik_expr(i, k, T) - self.d_ik_expr(i, j, T))
+                + 1. / 2. * sum(
+            ys[i] * ys[j] * (2. * self.d_ik_expr(i, k, T) - self.d_ik_expr(i, j, T))
             for i in range(self.num_components) for j in range(self.num_components)
         )
         )
@@ -587,14 +678,17 @@ class SecondVirialMixture(MixingRule):
         i = self.cas_numbers.index(cas_i)
         return self.hat_phi_i_expr(i, ys, P, T) * ys[i] * P
 
-    def bar_GiR_RT(self, k: int, ys: typing.List[typing.Union[float, typing.Any]], P, T):
+    def bar_GiR_RT(self, cas_k: str, ys: typing.List[typing.Union[float, typing.Any]], P, T):
         r"""Dimensionless residual partial molar free energy of component :math:`i`
 
-        .. math::
-            \frac{\bar{G}^\mathrm{R}_i}{RT} = \ln\hat{\phi}_i
-            :label: eq_GiR
-
+        :param cas_k: cas number of component k
+        :param ys: mole fractions
+        :param P: pressure in Pa
+        :param T: temperature in K
+        :returns: Equation :eq:`barGiR`
         """
+        assert cas_k in self.cas_numbers, 'Cas number not found'
+        k = self.cas_numbers.index(cas_k)
         return self.ln_hat_phi_k_expr(k, ys, P, T)
 
     def d_Bij_d_Trij(self, i: int, j: int, T):
@@ -622,170 +716,107 @@ class SecondVirialMixture(MixingRule):
         :param j: index for componen t *j*
         :param T: temperature [K]
         """
+        if i == j:
+            return 0.
+
         return 2. * self.d_Bij_d_Trij(i, j, T) \
                - self.d_Bij_d_Trij(i, i, T) \
                - self.d_Bij_d_Trij(j, j, T)
 
-    def Tstar_d_lnphi_dTstar(self, cas_i, y_i, P, T):
-        r"""Returns
-
-        .. math::
-            \begin{align}
-                T^\star \frac{\partial \ln{\hat{\phi}_i}}{\partial T^\star}
-                    &=  \frac{T T_\text{ref}}{T_\text{ref}}\frac{\partial \ln{\hat{\phi}_i}}{\partial T}
-                    = \frac{T}{T_\text{c}}\frac{\partial \ln{\hat{\phi}_i}}{\partial T_\text{r}} \\
-                &= \frac{T}{T_\text{c}}\left[
-                                        \frac{P}{RT}\left(
-                                            \frac{\partial B_{ii}}{\partial T_r} + (1-y_i)^2\frac{\partial \delta_{ij}}{\partial T_r}
-                                            \right)
-                                        - \frac{T_c\ln\hat{\phi}_i}{T}
-                \right] \\
-                &= \frac{P}{R T_\text{c}}\left(
-                                            \frac{\partial B_{ii}}{\partial T_r} + (1-y_i)^2\frac{\partial \delta_{ij}}{\partial T_r}
-                                            \right)
-                                        - \ln\hat{\phi}_i \\
-                &= -\frac{\bar{H}_i^\text{R}}{RT}
-            \end{align}
-
-        where :math:`\frac{\partial \delta_{ij}}{\partial T_r}` is given by :eq:`eq_d_dij`
-
-        :param cas_i: cas number for component of interest
-        :type cas_i: str
-        :param y_i: mole fraction of component of interest
-        :type y_i: float
-        :param P: pressure in Pa
-        :type P: float
-        :param T: temperature in K
-        :type T: float
-        """
-        return -self.bar_HiR_RT(cas_i, y_i, P, T)
-
-    def bar_HiR_RT(self, cas_i, y_i, P, T):
+    def bar_HiR_RT(self, cas_k: str, ys: typing.List[typing.Union[float, typing.Any]], P, T):
         r"""Dimensionless residual partial molar enthalpy of component :math:`i`
 
-        .. math::
-            \begin{align}
-                \frac{\bar{H}^\mathrm{R}_i}{RT} &= -T \left(\frac{\partial \ln\hat{\phi}_i}{\partial T}\right)_{P,y} \\
-                                     &= - \frac{T}{T_c} \left(\frac{\partial \ln\hat{\phi}_i}{\partial T_r}\right)_{P,y} \\
-                                     &= - \frac{T}{T_c}\left(
-                                        \frac{P}{RT}\left[
-                                            \frac{\partial B_{ii}}{\partial T_r} + (1-y_i)^2\frac{\partial \delta_{ij}}{\partial T_r}
-                                            \right]
-                                        - \frac{T_c\ln\hat{\phi}_i}{T}
-                                     \right)
-            \end{align}
-
-        where :math:`\frac{\partial \delta_{ij}}{\partial T_r}` is given by :eq:`eq_d_dij`
-        so that we obtain
-
-        .. math::
-            \frac{\bar{H}^\mathrm{R}_i}{RT} = -\frac{P}{RT_c}\left[
-                        \frac{\partial B_{ii}}{\partial T_r} + (1-y_i)^2\frac{\partial \delta_{ij}}{\partial T_r}
-                                            \right]
-                                        + \ln\hat{\phi}_i
-            :label: eq_HiR
-
-        :param cas_i: cas number for component of interest
-        :type cas_i: str
-        :param y_i: mole fraction of component of interest
-        :type y_i: float
+        :param cas_k: cas number for component of interest
+        :param ys: mole fractions
         :param P: pressure in Pa
-        :type P: float
         :param T: temperature in K
-        :type T: float
         """
-        w, T_c, P_c = self.get_w_Tc_Pc(cas_i)
-        return -P / self.R / T_c * (self.d_Bij_d_Trij(cas_i, cas_i, T) + (1. - y_i) * (1. - y_i) * self.d_dij_d_Tr(
-            T)) + self.ln_hat_phi_k_expr(cas_i, y_i, P, T)
-
-    def bar_SiR_R(self, cas_i, y_i, P, T):
-        r"""Dimensionless residual partial molar entropy of component :math:`i`
-
-        Since
-
-        .. math::
-            G^\mathrm{R} = H^\mathrm{R} - T S^\mathrm{R}
-
-        In terms of partial molar properties, then
-
-        .. math::
-            \begin{align}
-                \bar{S}_i^\mathrm{R} &= \frac{\bar{H}_i^\mathrm{R} - \bar{G}_i^\mathrm{R}}{T} \\
-                \frac{\bar{S}_i^\mathrm{R}}{R} &= \frac{\bar{H}_i^\mathrm{R}}{RT} - \frac{\bar{G}_i^\mathrm{R}}{RT} \\
-            \end{align}
-
-        By comparing Equation :eq:`eq_GiR` and :eq:`eq_HiR` it is observed that
-
-        .. math::
-            \frac{\bar{S}_i^\mathrm{R}}{R} = -\frac{P}{RT_c}\left[
-                        \frac{\partial B_{ii}}{\partial T_r} + (1-y_i)^2\frac{\partial \delta_{ij}}{\partial T_r}
-                                            \right]
-
-        where :math:`\frac{\partial \delta_{ij}}{\partial T_r}` is given by :eq:`eq_d_dij`
-
-        :param cas_i: cas number for component of interest
-        :type cas_i: str
-        :param y_i: mole fraction of component of interest
-        :type y_i: float
-        :param P: pressure in Pa
-        :type P: float
-        :param T: temperature in K
-        :type T: float
-        """
-        w, T_c, P_c = self.get_w_Tc_Pc(cas_i)
-        return -P / self.R / T_c * (
-                self.d_Bij_d_Trij(cas_i, cas_i, T) + (1. - y_i) * (1. - y_i) * self.d_dij_d_Tr(T)
+        assert cas_k in self.cas_numbers, 'Cas number not found'
+        k = self.cas_numbers.index(cas_k)
+        T_c = self.T_cs[k]
+        return self.ln_hat_phi_k_expr(k, ys, P, T) - P / R / T_c * (
+                self.d_Bij_d_Trij(k, k, T)
+                + 1. / 2. * sum(
+            ys[i] * ys[j] * (2. * self.d_dij_d_Tr(i, k, T) - self.d_dij_d_Tr(i, j, T))
+            for i in range(self.num_components) for j in range(self.num_components)
+        )
         )
 
-    def bar_ViR_RT(self, cas_i, y_i, P, T):
-        r""" residual Partial molar volume for component *i*
+    def bar_SiR_R(self, cas_k: str, ys: typing.List[typing.Union[float, typing.Any]], P, T):
+        r"""Dimensionless residual partial molar entropy of component :math:`i`
 
-        .. math::
-            \begin{align}
-                \frac{\bar{V}_i^\mathrm{R}}{RT} &= \left(\frac{\partial \ln\hat{\phi}_i}{\partial P}\right)_{T,y}\\
-                &= \frac{B_{ii} + (1-y_i)^2\delta_{ij}}{RT}
-            \end{align}
+        :param cas_k: cas number for component of interest
+        :param ys: mole fractions
+        :param P: pressure in Pa
+        :param T: temperature in K
+        :returns: Equation :eq:`barSiR`
+        """
+        assert cas_k in self.cas_numbers, 'Cas number not found'
+        k = self.cas_numbers.index(cas_k)
+        T_c = self.T_cs[k]
+        return -P / R / T_c * (
+                self.d_Bij_d_Trij(k, k, T)
+                + sum(
+            1. / 2. * ys[i] * ys[j] * (2. * self.d_dij_d_Tr(i, k, T) - self.d_dij_d_Tr(i, j, T))
+            for i in range(self.num_components) for j in range(self.num_components)
+        )
+        )
+
+    def bar_ViR_RT(self, cas_k: str, ys: typing.List[typing.Union[float, typing.Any]], P, T):
+        r""" residual Partial molar volume for component *i*
 
         .. note::
             This expression does not depend on :math:`P`
 
-        :param cas_i: cas number for component of interest
-        :type cas_i: str
-        :param y_i: mole fraction of component of interest
-        :type y_i: float
+        :param cas_k: cas number for component of interest
+        :param ys: mole fractions
         :param P: pressure in Pa
-        :type P: float
         :param T: temperature in K
-        :type T: float
-        :return: :math:`\bar{V}_i^\mathrm{R}/R/T`
+        :returns: Equation :eq:`barViR`
         """
-        return (self.B_ij_expr(cas_i, cas_i, T) + (1 - y_i) * (1 - y_i) * self.d_ik_expr(T)) / self.R / T
+        assert cas_k in self.cas_numbers, 'Cas number not found'
+        k = self.cas_numbers.index(cas_k)
+        return 1. / R / T(
+            self.B_ij_expr(k, k, T)
+            + 1. / 2. * sum(
+                ys[i] * ys[j] * (2. * self.d_ik_expr(i, k, T) - self.d_ik_expr(i, j, T))
+                for i in range(self.num_components) for j in range(self.num_components)
+            )
+        )
 
-    def X_R_dimensionless(self, method: callable, cas_i: str, y_i: float, P: float, T: float):
+    def M_R_dimensionless(self, method: callable, ys: typing.List[typing.Union[float, typing.Any]], P: float, T: float):
         """Residual property of :math:`X` for mixture.
+
+        Similar to Equation :eq:`residual_molar` but in dimensionless form
 
         :param method: function to compute partial molar property of compound
         :type method: callable
         """
-        y_j = 1. - y_i
-        cas_j = self.other_cas[cas_i]
-        return (
-                y_i * method(cas_i, y_i, P, T) + y_j * method(cas_j, y_j, P, T)
+        return sum(
+            ys[i] * method(self.cas_numbers[i], ys, P, T) for i in range(self.num_components)
         )
 
     def S_R_R(self, *args):
         """Residual entropy of mixture :math:`S^\mathrm{R}`"""
-        return self.X_R_dimensionless(self.bar_SiR_R, *args)
+        return self.M_R_dimensionless(self.bar_SiR_R, *args)
 
     def H_R_RT(self, *args):
         """Residual enthalpy of mixture :math:`H^\mathrm{R}`"""
-        return self.X_R_dimensionless(self.bar_HiR_RT, *args)
+        return self.M_R_dimensionless(self.bar_HiR_RT, *args)
 
     def G_R_RT(self, *args):
         """Residual free energy of mixture :math:`G^\mathrm{R}`"""
-        return self.X_R_dimensionless(self.bar_GiR_RT, *args)
+        return self.M_R_dimensionless(self.bar_GiR_RT, *args)
 
-    def plot_residual_HSG(self, P, T, ax=None, fig=None):
+    def plot_residual_HSG(self, P, T, ax=None, fig=None) -> typing.Tuple[plt.figure, plt.subplot]:
+        """Plot dimensionless residual properties as a function of mole fraction
+
+        :param P: pressure in Pa
+        :param T: Temperature in K
+        :param ax: matplotlib ax, defaults to None
+        :param fig: matplotlib figure, defautls to None
+        """
+
         if ax is None:
             if fig is None:
                 fig = plt.figure()
@@ -794,9 +825,9 @@ class SecondVirialMixture(MixingRule):
             ax.set_xlabel('Gas-Phase Mole fraction %s' % self.i.compound_name)
 
         y_1 = np.linspace(0., 1.)
-        HR_RT = np.array(list(self.H_R_RT(self.i.cas_number, i, P, T) for i in y_1))
-        GR_RT = np.array(list(self.G_R_RT(self.i.cas_number, i, P, T) for i in y_1))
-        SR_R = np.array(list(self.S_R_R(self.i.cas_number, i, P, T) for i in y_1))
+        HR_RT = np.array(list(self.H_R_RT([i, 1. - i], P, T) for i in y_1))
+        GR_RT = np.array(list(self.G_R_RT([i, 1. - i], P, T) for i in y_1))
+        SR_R = np.array(list(self.S_R_R([i, 1. - i], P, T) for i in y_1))
         ax.plot(y_1, HR_RT, '-', label='$H^\\mathrm{R}/(RT)$')
         ax.plot(y_1, GR_RT, '--', label='$G^\\mathrm{R}/(RT)$')
         ax.plot(y_1, SR_R, '-.', label='$S^\\mathrm{R}/R$')
