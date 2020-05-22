@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gasthermo",
-    version="0.0.4",
+    version="0.0.5",
     author="Robert F. De Jaco",
     author_email="dejac001@umn.edu",
     description="Gas-Phase Thermodynamics in Python",
