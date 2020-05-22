@@ -3,23 +3,24 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to GasThermo's documentation!
-======================================
+GasThermo
+=========
+
+A package for obtaining gas-phase thermodynamic properties and computing integrals.
+Designed for integration with computational simulation environments.
+
+.. image:: THF-WATER.png
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
    :numbered:
    :caption: Contents:
 
 
+   gettingstarted
    definitions
-   gasthermo
-   heat_capacity
-   critical_properties
-   virial
-   cubic
-   thermal_conductivity
-   viscosity
+   eos
+   propertydata
    zreferences
 
 

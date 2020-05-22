@@ -8,21 +8,19 @@ from gasthermo.eos.virial import SecondVirial, SecondVirialMixture
 
 tol = 0.1
 # H2S
-i = 'H2S'
-casi = '000'
+i = 'Hydrogen sulfide'
+casi = '7783-06-04'
 T_ci = 374.5
 V_ci = 9.44e-5
 Z_ci = 0.284
 w_i = 0.0942
 MW_i = 34.081
 P_ci = Z_ci * gas_constant * T_ci / V_ci
-# compound_name_i = 'H2S'
 
-# CH4
-j = 'CH4'
-casj = '2200'
+j = 'Methane'
+casj = '74-82-8'
 T_cj = 191.4
-V_cj = 0.100
+V_cj = 0.0001
 Z_cj = 0.286
 w_j = 0.0115
 MW_j = 16.042

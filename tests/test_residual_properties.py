@@ -3,6 +3,7 @@ import numpy as np
 from gasthermo.eos.cubic import PengRobinson
 from gasthermo.eos.virial import SecondVirial, SecondVirialMixture
 from tests.test_cp_ig import compounds_to_test
+from chem_util.chem_constants import gas_constant as R
 
 
 def test_virial():
@@ -17,8 +18,10 @@ def test_virial():
 
 def test_binary_virial():
     r"""For binary virial, test that
+
     .. math::
         \frac{G^\text{R}}{RT} = \frac{H^\text{R}}{RT} - \frac{S^\text{R}}{R}
+
     and, in the limit of pure components, test that
     the residual properties calculated by BinarySecondVirial and SecondVirial (the pure comeponent one)
     are equivalent
@@ -48,5 +51,5 @@ def test_cubic():
     for i in compounds_to_test:
         I = PengRobinson(compound_name=i)
         Z = I.iterate_to_solve_Z(T, P)
-        V = Z*I.R*T/P
+        V = Z*R*T/P
         assert np.isclose(I.G_R_RT_expr(P, V, T), I.H_R_RT_expr(P, V, T)-I.S_R_R_expr(P, V, T)), 'compound not thermodynamically consistend residual properties {}'.format(i)

@@ -1,4 +1,4 @@
-from chem_util.chem_constants import gas_constant
+from chem_util.chem_constants import gas_constant as R
 from chem_util.math import percent_difference
 
 from . import os, ROOT_DIR
@@ -29,15 +29,11 @@ class CriticalConstants:
     def __init__(self, dippr_no: str = None, compound_name: str = None, cas_number: str = None,
                  MW: float = None, P_c: float = None, V_c: float = None, Z_c: float = None,
                  T_c: float = None, w: float = None):
-        """
-
-        """
         file = os.path.join(ROOT_DIR, 'critical_constants.csv')
         my_header = [
             'Cmpd. no.', 'Name', 'Formula', 'CAS no.', 'Mol. wt. [g/mol]',
             'Tc [K]', 'Pc [MPa]', 'Vc [m3/kmol]', 'Zc', 'Acentric factor'
         ]
-        self.R = gas_constant
         self.dippr_no = dippr_no
         self.compound_name = compound_name
         self.cas_number = cas_number
@@ -70,13 +66,21 @@ class CriticalConstants:
             assert found_compound, 'No compound was found in table! for {}, {}, {}'.format(self.dippr_no, self.compound_name, self.cas_number)
             assert self.Z_c_percent_difference() < self.tol, 'Critical compressibility inconsistency!'
         else:
+            # make dummy class from DIPPR table, test that custom parameters are at least close to DIPPR
+            dippr_cls = CriticalConstants(compound_name=self.compound_name)
+            assert abs(percent_difference(self.Z_c, dippr_cls.Z_c)) < 50., 'Percent difference too high for Z_c'
+            assert abs(percent_difference(self.V_c, dippr_cls.V_c)) < 50., 'Percent difference too high for V_c'
+            assert abs(percent_difference(self.P_c, dippr_cls.P_c)) < 50., 'Percent difference too high for P_c'
+            assert abs(percent_difference(self.T_c, dippr_cls.T_c)) < 50., 'Percent difference too high for T_c'
+            assert abs(percent_difference(self.w, dippr_cls.w)) < 50., 'Percent difference too high for w'
+            assert abs(percent_difference(self.MW, dippr_cls.MW)) < 0.01, 'Percent difference too high for MW'
             assert (self.compound_name is not None and self.cas_number is not None
                     and self.MW is not None and self.P_c is not None and self.V_c is not None and self.Z_c is not None
                     and self.w is not None and self.T_c is not None), 'Inconsistent input, need to input all values'
 
     def calc_Z_c(self):
         """Calculate critical compressibility, for comparison to tabulated value"""
-        return self.P_c * self.V_c / self.R / self.T_c
+        return self.P_c * self.V_c / R / self.T_c
 
     def Z_c_percent_difference(self):
         """calculate percent difference between Z_c calculated and tabulated"""

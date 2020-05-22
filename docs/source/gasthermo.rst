@@ -1,5 +1,0 @@
-Examples
-========
-
-.. automodule:: gasthermo
-

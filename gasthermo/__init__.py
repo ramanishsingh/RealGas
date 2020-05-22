@@ -98,6 +98,58 @@ factor can be obtained easily.
 >>> pr.num_roots(100., 5e5)
 1
 
+Input custom thermodynamic critical properties
+
+>>> from gasthermo.eos.cubic import PengRobinson
+>>> dippr = PengRobinson(compound_name='Methane')
+>>> custom = PengRobinson(compound_name='Methane', cas_number='72-28-8',
+...                       T_c=191.4, V_c=0.0001, Z_c=0.286, w=0.0115, MW=16.042, P_c=0.286*8.314*191.4/0.0001)
+>>> dippr.iterate_to_solve_Z(T=300., P=8e5)
+0.9828233
+>>> custom.iterate_to_solve_Z(T=300., P=8e5)
+0.9823877
+
+
+If we accidentally input the wrong custom units,
+it is likely that :class:`gasthermo.critical_constants.CriticalConstants` will catch it.
+
+>>> from gasthermo.eos.cubic import PengRobinson
+>>> PengRobinson(compound_name='Methane', cas_number='72-28-8',
+...                       T_c=273.-191.4, V_c=0.0001, Z_c=0.286, w=0.0115, MW=16.042, P_c=0.286*8.314*191.4/0.0001)
+Traceback (most recent call last):
+...
+AssertionError: Percent difference too high for T_c
+>>> PengRobinson(compound_name='Methane', cas_number='72-28-8',
+...                       T_c=191.4, V_c=0.0001*100., Z_c=0.286, w=0.0115, MW=16.042, P_c=0.286*8.314*191.4/0.0001)
+Traceback (most recent call last):
+...
+AssertionError: Percent difference too high for V_c
+>>> PengRobinson(compound_name='Methane', cas_number='72-28-8',
+...                       T_c=191.4, V_c=0.0001, Z_c=2.86, w=0.0115, MW=16.042, P_c=0.286*8.314*191.4/0.0001)
+Traceback (most recent call last):
+...
+AssertionError: Percent difference too high for Z_c
+>>> PengRobinson(compound_name='Methane', cas_number='72-28-8',
+...                       T_c=191.4, V_c=0.0001, Z_c=0.286, w=1.115, MW=16.042, P_c=0.286*8.314*191.4/0.0001)
+Traceback (most recent call last):
+...
+AssertionError: Percent difference too high for w
+>>> PengRobinson(compound_name='Methane', cas_number='72-28-8',
+...                       T_c=191.4, V_c=0.0001, Z_c=0.286, w=0.0115, MW=18.042, P_c=0.286*8.314*191.4/0.0001)
+Traceback (most recent call last):
+...
+AssertionError: Percent difference too high for MW
+>>> PengRobinson(compound_name='Methane', cas_number='72-28-8',
+...                       T_c=191.4, V_c=0.0001, Z_c=0.286, w=0.0115, MW=18.042, P_c=0.286*0.008314*191.4/0.0001)
+Traceback (most recent call last):
+...
+AssertionError: Percent difference too high for P_c
+
+
+It performs the checks by comparing to the DIPPR :cite:`DIPPR` database and asserting that
+the values are within a reasonable tolerance
+
+
 Gotchas
 -------
 * All units are SI units
