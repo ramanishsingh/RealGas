@@ -13,7 +13,7 @@ Designed for integration with computational simulation environments.
 
 Documentation
 =============
-The online documentation is hosted at [read the docs](https://gasthermo.readthedocs.io/en/master/).
+The online documentation is hosted at [read the docs](https://gasthermo.readthedocs.io/en/latest/).
 
 Contributing
 ============
