@@ -120,7 +120,6 @@ class RealMixture(IdealMixture):
 
         if isinstance(self.k_ij, float):
             val = self.k_ij
-            assert self.num_components == 2, 'Kij cannot be float when num components != 2'
             self.k_ij = [[0. for i in range(self.num_components)] for j in range(self.num_components)]
             for i in range(self.num_components):
                 for j in range(self.num_components):

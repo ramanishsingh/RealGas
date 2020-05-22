@@ -1,11 +1,12 @@
 import logging
 
 import matplotlib.pyplot as plt
+import uuid
 import numpy as np
 from chem_util.chem_constants import gas_constant
 from chem_util.math import percent_difference
 
-from . import os, ROOT_DIR
+from gasthermo import os, ROOT_DIR
 
 
 class CpIdealGas:
@@ -22,6 +23,39 @@ class CpIdealGas:
     Computing integrals of Equation :eq:`cp_ig` is challenging.
     Instead, the function is fit to a polynomial within a range of interest
     so that it can be integrated by using an antiderivative that is a polynomial.
+
+    Automatically tries to raise errors if fit is not good enough:
+
+
+    >>> from gasthermo.cp import CpIdealGas
+    >>> I = CpIdealGas(compound_name='Methane')
+    Traceback (most recent call last):
+        ...
+    Exception: Fit is too poor (not in (0.99,1)) too large!
+    Try using a smaller temperature range for fitting
+    and/or increasing the number of fitting points and polynomial degree.
+    See error path in error-*dir
+
+    This will lead to an error directory with a figure saved in it that looks like the following:
+
+    .. image:: error_cp.png
+
+    Usually, we wont need an accurate function over this entire temperature range.
+    Lets imagine that we are interested instead in a temperature interval
+    between 200 and 600 K.
+    In this case
+
+    >>> I = CpIdealGas(compound_name='Methane', T_min_fit=200., T_max_fit=600.)
+
+    And then we can save the results to a file
+
+    >>> fig = plt.figure()
+    >>> fig, ax = I.plot(fig=fig)
+    >>> fig.savefig('docs/source/cp-methane-fixed.png')
+
+    Which leads to a much better fit, as shown below
+
+    .. image:: cp-methane-fixed.png
 
 
     :param dippr_no: dippr_no of compound by DIPPR table, defaults to None
@@ -48,7 +82,7 @@ class CpIdealGas:
     :type C4: float, derived from input
     :param C5: parameter in Equation :eq:`cp_ig`
     :type C5: float, derived from input
-    :param Cp_units: units for :math:`C_{\mathrm{p}}^{\mathrm{IG}}`, defaults to J/mol/K
+    :param Cp_units: units for :math:`C_{\mathrm{p}}^{\mathrm{IG}}`, defaults to J/mol/K (SI units)
     :type Cp_units: str, optional
     :param T_units: units for :math:`T`, defaults to K
     :type T_units: str, optional
@@ -125,9 +159,13 @@ class CpIdealGas:
 
         if self.get_numerical_percent_difference() > 0.001:
             fig, ax = self.plot()
-            fig.savefig('error_cp.png')
-            raise Exception('Error in integration is too large! Try using a smaller temperature range for fitting '
-                            'and/or increasing the number of fitting points and polynomial degree')
+            error_path = 'error-%s' % str(uuid.uuid4())
+            os.makedirs(error_path)
+            fig.savefig(os.path.join('%s'%error_path, 'error_cp.png'))
+            raise Exception('Fit is too poor (not in (0.99,1)) too large!\n'
+                            'Try using a smaller temperature range for fitting\n'
+                            'and/or increasing the number of fitting points and polynomial degree.\n'
+                            'See error path in error-*dir')
 
     def eval(self, T, f_sinh=np.sinh, f_cosh=np.cosh):
         """Evaluate heat capacity
@@ -325,10 +363,11 @@ class CpRawData:
 
         if not (0.99 <= self.R2 <= 1.):
             fig, ax = self.plot()
-            fig.savefig('cp_error.png')
-            plt.show()
-            raise Exception('Fit is too poor (R2={} not in (0.99,1)) too large! Try using a smaller temperature range for fitting '
-                            'and/or increasing the number of fitting points and polynomial degree'.format(self.R2))
+            error_path = 'error-%s' % str(uuid.uuid4())
+            os.makedirs(error_path)
+            fig.savefig(os.path.join('%s'%error_path, 'error_cp.png'))
+            raise Exception('Fit is too poor (not in (0.99,1)) too large! Try using a smaller temperature range for fitting '
+                            'and/or increasing the number of fitting points and polynomial degree. See error path in error-*dir')
 
     def eval(self, T):
         return self.Cp_poly(T)

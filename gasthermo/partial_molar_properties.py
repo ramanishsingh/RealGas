@@ -166,6 +166,98 @@ class Mixture(SecondVirialMixture):
     :param ideal: whether or not ideal gas, defaults to True
     :type ideal: bool, optional
     :param kwargs: key-word arguments for :class:`gasthermo.eos.virial.SecondVirialMixture`
+
+    >>> from gasthermo.partial_molar_properties import Mixture
+    >>> cp_kwargs = dict(T_min_fit=200., T_max_fit=600.)
+    >>> I = Mixture(
+    ...     [dict(compound_name='Methane', **cp_kwargs), dict(compound_name='Ethane', **cp_kwargs)],
+    ...      compound_names=['Methane', 'Ethane'],
+    ...      ideal=False,
+    ...     )
+    >>> I.T_cs
+    [190.564, 305.32]
+    >>> I.cas_numbers
+    ['74-82-8', '74-84-0']
+
+    The reference state is the pure component at :math:`P=0` and :math:`T=T_\text{ref}`.
+    The reference temperature is :math:`T_\text{ref}` and defaults to 0 K. But different values can be used,
+    as shown below
+
+    >>> I.enthalpy(ys=[0.5, 0.5], P=1e5, T=300.)
+    9037.38831833366
+    >>> I.enthalpy(ys=[0.5, 0.5], P=1e5, T=300., T_ref=0.)
+    9037.38831833366
+    >>> I.enthalpy(ys=[0.5, 0.5], P=1e5, T=300., T_ref=300.)
+    -31.3390587754798
+    >>> I.ideal = True
+    >>> I.enthalpy(ys=[0.5, 0.5], P=1e5, T=300., T_ref=300.)
+    0.0
+
+    And we observe that the enthalpy can be non-zero for real gases when the reference
+    temperature is chosen to be the same as the temperature of interest,
+    since the enthalpy departure function is non-zero.
+
+    However, for a real gas,
+
+    >>> I.ideal = False
+
+    in the limit that the gas has low pressure and high temperature,
+
+    >>> I.enthalpy(ys=[0.5, 0.5], P=1., T=500., T_ref=500.)
+    -0.00011195866675479858
+
+    In the limit that the gas becomes a pure mixture,
+    we recover the limit that :math:`\bar{H}_i^\text{pure}=H^\text{pure}`
+    or :math:`\bar{H}_i^\text{pure}-H^\text{pure}=0.`
+
+    >>> kwargs = dict(ys=[1., 0.], P=1e5, T=300.)
+    >>> I.enthalpy(**kwargs)-I.bar_Hi(I.cas_numbers[0], **kwargs)
+    0.0
+    >>> kwargs = dict(ys=[0., 1.], P=1e5, T=300.)
+    >>> I.enthalpy(**kwargs)-I.bar_Hi(I.cas_numbers[1], **kwargs)
+    0.0
+
+    Using the second order virial equation of state we can perform these same
+    calculations on multicomponent mixtures, as shown below
+
+    .. note::
+        all units are SI units, so the enthalpy here is in J/mol
+
+    >>> cp_kwargs = dict(T_min_fit=200., T_max_fit=600.)
+    >>> M = Mixture(
+    ...     [dict(compound_name='Methane', **cp_kwargs),
+    ...      dict(compound_name='Ethane', **cp_kwargs), dict(compound_name='Ethylene', **cp_kwargs),
+    ...      dict(compound_name='Carbon dioxide', **cp_kwargs)],
+    ...      compound_names=['Methane', 'Ethane', 'Ethylene', 'Carbon dioxide'],
+    ...      ideal=False,
+    ...     )
+    >>> M.enthalpy(ys=[0.1, 0.2, 0.5, 0.2], P=10e5, T=300.)
+    7432.665935732932
+    >>> M.enthalpy(ys=[1.0, 0.0, 0.0, 0.0], P=10e5, T=300.) - M.bar_Hi(M.cas_numbers[0], ys=[1.0, 0.0, 0.0, 0.0], P=10e5, T=300.)
+    0.0
+
+    Another simple check is to ensure that we get the same answer regardless of the order of the compounds
+    >>> N = Mixture(
+    ...     [dict(compound_name='Ethane', **cp_kwargs),
+    ...      dict(compound_name='Methane', **cp_kwargs), dict(compound_name='Ethylene', **cp_kwargs),
+    ...      dict(compound_name='Carbon dioxide', **cp_kwargs)],
+    ...      compound_names=['Ethane', 'Methane', 'Ethylene', 'Carbon dioxide'],
+    ...      ideal=False,
+    ...     )
+    >>> M.enthalpy(ys=[0.4, 0.3, 0.17, 0.13], P=5e5, T=300.) - N.enthalpy(ys=[0.3, 0.4, 0.17, 0.13], P=5e5, T=300.)
+    0.0
+
+    And that, further, a mixture with an extra component that is not present (mole fraction 0.)
+    converges to an :math:`N-1` mixture
+    >>> Nm1 = Mixture(  # take out CO2
+    ...     [dict(compound_name='Ethane', **cp_kwargs),
+    ...      dict(compound_name='Methane', **cp_kwargs), dict(compound_name='Ethylene', **cp_kwargs)],
+    ...      compound_names=['Ethane', 'Methane', 'Ethylene'],
+    ...      ideal=False,
+    ...     )
+    >>> N.enthalpy(ys=[0.4, 0.3, 0.3, 0.], P=5e5, T=300.) - Nm1.enthalpy(ys=[0.4, 0.3, 0.3], P=5e5, T=300.)
+    0.0
+
     """
 
     def __init__(self, cp_args: typing.List[dict], ideal=True, **kwargs):
@@ -205,11 +297,11 @@ class Mixture(SecondVirialMixture):
         assert not self.ideal, 'No residual props for ideal gas'
         return R * T * self.bar_ViR_RT(cas_k, ys, P, T)
 
-    def bar_Hi(self, cas_k: str, ys: typing.List[typing.Union[float, typing.Any]], P, T):
+    def bar_Hi(self, cas_k: str, ys: typing.List[typing.Union[float, typing.Any]], P, T, T_ref=0):
         if self.ideal:
-            return self.bar_Hi_IG(cas_k, T)
+            return self.bar_Hi_IG(cas_k, T, T_ref=T_ref)
 
-        return self.bar_Hi_IG(cas_k, T) + R * T * self.bar_HiR_RT(cas_k, ys, P, T)
+        return self.bar_Hi_IG(cas_k, T, T_ref=T_ref) + R * T * self.bar_HiR_RT(cas_k, ys, P, T)
 
     def bar_Vi(self, cas_k: str, ys: typing.List[typing.Union[float, typing.Any]], P, T):
         if self.ideal:
@@ -217,7 +309,7 @@ class Mixture(SecondVirialMixture):
 
         return self.bar_Vi_IG(T, P) + R * T * self.bar_Vi_R(cas_k, ys, P, T)
 
-    def enthalpy(self, ys: typing.List[typing.Union[float, typing.Any]], P: float, T: float):
+    def enthalpy(self, ys: typing.List[typing.Union[float, typing.Any]], P: float, T: float, T_ref=0.):
         """Residual property of :math:`X` for mixture.
 
         Similar to Equation :eq:`residual_molar` but in dimensionless form
@@ -226,12 +318,16 @@ class Mixture(SecondVirialMixture):
         :type method: callable
         """
         return sum(
-            ys[i] * self.bar_Hi(self.cas_numbers[i], ys, P, T) for i in range(self.num_components)
+            ys[i] * self.bar_Hi(self.cas_numbers[i], ys, P, T, T_ref) for i in range(self.num_components)
         )
 
 
 class MixtureDimensionless(SecondVirialMixture):
     """
+
+    .. todo::
+        add docs!
+
     :param ideal: whether or not ideal gas, defaults to True
     :type ideal: bool, optional
     :param kwargs: key-word arguments for :class:`gasthermo.eos.virial.SecondVirialMixture`
