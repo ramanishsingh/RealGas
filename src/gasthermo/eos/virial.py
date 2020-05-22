@@ -1,5 +1,8 @@
 r"""
 
+Theory
+------
+
 The second order virial equation of state is :cite:`Perry`
 
 .. math::
@@ -10,6 +13,7 @@ Where the composition dependency of :math:`B` is given by the *exact* mixing rul
 
 .. math::
     B = \sum_i \sum_j y_i y_j B_{ij}
+    :label: B_mix_expr
 
 where :math:`B_{ij}=B_{ji}`, and :math:`B_{ii}` and :math:`B_{jj}` are virial coefficients for the pure species
 
@@ -17,6 +21,7 @@ In this package, the useful correlation
 
 .. math::
     \frac{BP_\text{c}}{RT_\text{c}} = B^0 + \omega B^1
+
 or
 
 .. math::
@@ -73,41 +78,21 @@ The cross coefficients are calculated as
 
 .. math::
     B_{ij} = \frac{RT_{\text{c}ij}}{P_{\text{c}ij}}\left(B^0 + \omega_{ij}B^1\right)
+    :label: B_ij_expr
 
 so that the cross derivatives can be computed as
 
 .. math::
     \frac{dB_{ij}}{dT} = \frac{RT_{\text{c}ij}}{P_{\text{c}ij}}\left(\frac{dB^0}{d T} + \omega_{ij}\frac{dB^1}{dT}\right)
 
+    \frac{dB_{ij}}{dT} = \frac{R}{P_{\text{c}ij}}\left(\frac{dB^0}{d T_{\text{r}ij}} + \omega_{ij}\frac{dB^1}{dT_{\text{r}ij}}\right)
+
 or, equivalently,
 
 .. math::
-    \frac{dB_{ij}}{dT} = \frac{R}{P_{\text{c}ij}}\left(\frac{dB^0}{d T_{\text{r}ij}} + \omega_{ij}\frac{dB^1}{dT_{\text{r}ij}}\right)
+    \frac{dB_{ij}}{dT_{\text{r}ij}} = \frac{RT_{\text{c}ij}}{P_{\text{c}ij}}\left(\frac{dB^0}{d T_{\text{r}ij}} + \omega_{ij}\frac{dB^1}{dT_{\text{r}ij}}\right)
+    :label: dB_dTrij
 
-Combining Rules
----------------
-The following combining rules are used
-
-
-.. math::
-    \omega_{ij} = \frac{\omega_i + \omega_j}{2}
-    :label: omega_combine
-
-.. math::
-    T_{\text{c}ij} = \sqrt{T_{\text{c}i}T_{\text{c}j}}(1-k_{ij})
-    :label: Tc_combine
-
-.. math::
-    P_{\text{c}ij} = \frac{Z_{\text{c}ij}RT_{\text{c}ij}}{V_{\text{c}ij}}
-    :label: Pc_combine
-
-.. math::
-    Z_{\text{c}ij} = \frac{Z_{\text{c}i} + Z_{\text{c}j}}{2}
-    :label: Zc_combine
-
-.. math::
-    V_{\text{c}ij} = \left(\frac{V_{\text{c}i}^{1/3} + V_{\text{c}j}^{1/3}}{2}\right)^3
-    :label: vc_combine
 
 Fugacity Coefficients
 ---------------------
@@ -123,10 +108,11 @@ For the virial equation of state, this becomes :cite:`VanNess1982`
     \ln\hat{\phi}_k = \frac{P}{RT}\left[B_{kk} + \frac{1}{2}\sum_i\sum_jy_iy_j\left(2\delta_{ik} - \delta_{ij}\right)\right]
     :label: ln_phi_i_virial
 
-where
+where *both* :math:`i` and :math:`j` indices run over all species
 
 .. math::
     \delta_{ik} = 2B_{ik} - B_{ii} - B_{kk} = \delta_{ki}
+    :label: d_ik
 
 and
 
@@ -136,7 +122,8 @@ and
 """
 
 from ..critical_constants import CriticalConstants
-from chem_util.chem_constants import gas_constant
+import typing
+from chem_util.chem_constants import gas_constant as R
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -144,8 +131,6 @@ import matplotlib.pyplot as plt
 class Virial:
     """
 
-    :param R: gas constant, set to SI units
-    :type R: float, hard-coded
     :param pow: function for computing power, defaults to numpy.power
     :type pow: callable, optional
     :param exp: function for computing logarithm, defaults to numpy.exp
@@ -155,7 +140,6 @@ class Virial:
     def __init__(self, pow: callable = np.power, exp: callable = np.exp):
         self.pow = pow
         self.exp = exp
-        self.R = gas_constant
 
     def B0_expr(self, T_r):
         """
@@ -199,14 +183,14 @@ class Virial:
                 self.B0_expr(T_r) + w * self.B1_expr(T_r)
         )
 
-    def ln_hat_phi_i_expr(self, *args):
+    def ln_hat_phi_k_expr(self, *args):
         raise NotImplementedError
 
     def hat_phi_i_expr(self, *args):
         r"""expression for fugacity coefficient
-        :returns: :math:`\exp{\ln{\hat{\phi}_i}}
+        :returns: :math:`\exp{\ln{\hat{\phi}_i}}`
         """
-        return self.exp(self.ln_hat_phi_i_expr(*args))
+        return self.exp(self.ln_hat_phi_k_expr(*args))
 
 
 class SecondVirial(CriticalConstants, Virial):
@@ -234,7 +218,7 @@ class SecondVirial(CriticalConstants, Virial):
         T_r = T / self.T_c
         return P / self.P_c * (
                 self.B0_expr(T_r) / T_r - self.d_B0_d_Tr_expr(T_r) + self.w * (
-                    self.B1_expr(T_r) / T_r - self.d_B1_d_Tr_expr(T_r))
+                self.B1_expr(T_r) / T_r - self.d_B1_d_Tr_expr(T_r))
         )
 
     def G_R_RT_expr(self, P, T):
@@ -253,13 +237,13 @@ class SecondVirial(CriticalConstants, Virial):
 
         :param P: pressure in Pa
         :param T: temperature in K
-        :return: Equation :eq:`S_R_RT_virial`
+        :return: Equation :eq:`S_R_R_virial`
         """
         T_r = T / self.T_c
         P_r = P / self.P_c
         return -P_r * (self.d_B0_d_Tr_expr(T_r) + self.w * self.d_B1_d_Tr_expr(T_r))
 
-    def ln_hat_phi_i_expr(self, P, T):
+    def ln_hat_phi_k_expr(self, P, T):
         r"""logarithm of fugacity coefficient
 
         .. note::
@@ -324,192 +308,286 @@ class SecondVirial(CriticalConstants, Virial):
         ax.plot(P, Z, symbol, markerfacecolor='None', **kwargs)
 
 
-class BinarySecondVirial(CriticalConstants, Virial):
-    r"""Second virial with combining rules from :cite:`Prausnitz1986`
+class MixingRule(Virial):
+    r"""Van der Walls mixing rule
+
+    combining rules from :cite:`Prausnitz1986`
+
+
+    .. math::
+        \omega_{ij} = \frac{\omega_i + \omega_j}{2}
+        :label: omega_combine
+
+    .. math::
+        T_{\text{c}ij} = \sqrt{T_{\text{c}i}T_{\text{c}j}}(1-k_{ij})
+        :label: Tc_combine
+
+    .. math::
+        P_{\text{c}ij} = \frac{Z_{\text{c}ij}RT_{\text{c}ij}}{V_{\text{c}ij}}
+        :label: Pc_combine
+
+    .. math::
+        Z_{\text{c}ij} = \frac{Z_{\text{c}i} + Z_{\text{c}j}}{2}
+        :label: Zc_combine
+
+    .. math::
+        V_{\text{c}ij} = \left(\frac{V_{\text{c}i}^{1/3} + V_{\text{c}j}^{1/3}}{2}\right)^3
+        :label: vc_combine
+
+
+    """
+
+    def __init__(self, pow: callable = np.power, exp: callable = np.exp):
+        Virial.__init__(self, pow, exp)
+
+    def w_ij_rule(self, w_i, w_j):
+        r"""
+
+        :param w_i: accentric factor of component *i*
+        :param w_j: accentric factor of component *j*
+        :return: Equation :eq:`omega_combine`
+        """
+        return (w_i + w_j) / 2.
+
+    def T_cij_rule(self, T_ci, T_cj, k_ij):
+        """
+
+        :param T_ci: critical temperature of component i [K]
+        :param T_cj: ** j [K]
+        :param k_ij: k_ij parameter
+        :param pow: function to calculate sqrt f(args, 0.5)
+        :return: Equation :eq:`Tc_combine`
+        """
+        return pow(T_ci * T_cj, 0.5) * (1. - k_ij)
+
+    def P_cij_rule(self, Z_ci, V_ci, T_ci, Z_cj, V_cj, T_cj):
+        """
+
+        :return: Equation :eq:`Pc_combine`
+        """
+        Z_cij = self.Z_cij_rule(Z_ci, Z_cj)
+        T_cij = self.T_cij_rule(T_ci, T_cj)
+        V_cij = self.V_cij_rule(V_ci, V_cj)
+        return Z_cij * R * T_cij / V_cij
+
+    def Z_cij_rule(self, Z_ci, Z_cj):
+        """
+
+        :param Z_ci: critical compressibility factor of component *i*
+        :param Z_cj: critical compressibility factor of component *j*
+        :return: Equation :eq:`Zc_combine`
+        """
+        return (Z_ci + Z_cj) / 2.
+
+    def V_cij_rule(self, V_ci, V_cj):
+        """
+
+        :param V_ci: critical molar volume of component *i* [m**3/mol]
+        :param V_cj: critical molar volume of component *j* [m**3/mol]
+        :param mypow: function to calculate power
+        :return: Equation eq:`Vc_combine`
+        """
+        return self.pow(
+            (self.pow(V_ci, 1 / 3) + self.pow(V_cj, 1 / 3)) / 2., 3
+        )
+
+
+class SecondVirialMixture(MixingRule):
+    r"""Second virial with
 
 
     .. todo::
-        Fix docs here
+        Add docs here of attributes
 
-    .. math::
-        w_{ij} = \frac{w_i + w_j}{2}
 
-    .. math::
-        T_{\mathrm{c},ij} = \sqrt{T_{\mathrm{c},i}T_{\mathrm{c},j}}(1-k_{ij})
-        :label: eq_Tcij
-
-    .. math::
-        P_{\mathrm{c},ij} = \frac{Z_{\mathrm{c},ij}RT_{\mathrm{c},ij}}{V_{\mathrm{c},ij}}
-
-    where
-
-    .. math::
-        \begin{align}
-            Z_{\mathrm{c},ij} &= \frac{Z_{\mathrm{c},i} + Z_{\mathrm{c},j}}{2} \\\
-            V_{\mathrm{c},ij} &= \left(\frac{V_{\mathrm{c},i}^{1/3} + V_{\mathrm{c},j}^{1/3}}{2}\right)^{3}
-        \end{align}
-
-    :param k_ij: equation of state mixing rule in calculation of critical temperautre, see Equation :eq:`eq_Tcij`. When :math:`i=j` and for chemical similar species, :math:`k_{ij}=0`. Otherwise, it is a small (usually) positive number evaluated from minimal :math:`PVT` data or, in the absence of data, set equal to zero.
-    :type k_ij: float
+    :param k_ij: equation of state mixing rule in calculation of critical temperautre, see Equation :eq:`Tc_combine`. When :math:`i=j` and for chemical similar species, :math:`k_{ij}=0`. Otherwise, it is a small (usually) positive number evaluated from minimal :math:`PVT` data or, in the absence of data, set equal to zero.
     :param cas_pairs: pairs of cas registry numbers, derived from cas_numbers calculated
-    :type cas_pairs: list(tuple(str))
     :param other_cas: map from one cas number to other
-    :type other_cas: dict
+
+
+    .. note::
+        can only input both custom critical properties or both from DIPPR--cant have mixed at the moment
 
     """
 
     def __init__(self,
-                 i_kwargs=None, j_kwargs=None,
-                 k_ij=0., pow: callable = np.power, exp: callable = np.exp):
-        """
-
-        :param i_kwargs: kwargs for component i passed to critical constants
-        :param j_kwargs: kwargs for component j passed to critical constants
-        """
-        if i_kwargs is None:
-            i_kwargs = {}
-        if j_kwargs is None:
-            j_kwargs = {}
-        self.i = CriticalConstants(**i_kwargs)
-        self.j = CriticalConstants(**j_kwargs)
-        Virial.__init__(self, pow, exp)
-        assert self.i.cas_number != self.j.cas_number, 'Errors anticipated when cas numbers are equal if other properties are not'
-
+                 dippr_nos: typing.List[str] = None,
+                 compound_names: typing.List[str] = None,
+                 cas_numbers: typing.List[str] = None,
+                 MWs: typing.List[float] = None,
+                 P_cs: typing.List[float] = None,
+                 V_cs: typing.List[float] = None,
+                 Z_cs: typing.List[float] = None,
+                 T_cs: typing.List[float] = None,
+                 ws: typing.List[float] = None,
+                 k_ij: typing.Union[float, typing.List[float]] = None,
+                 pow: callable = np.power, exp: callable = np.exp):
+        MixingRule.__init__(self, pow, exp)
+        self.num_components = 0
+        self.dippr_nos = dippr_nos
+        if self.dippr_nos is not None:
+            self.num_components = len(self.dippr_nos)
+        self.compound_names = compound_names
+        if self.compound_names is not None:
+            self.num_components = len(self.compound_names)
+        self.cas_numbers = cas_numbers
+        if self.cas_numbers is not None:
+            self.num_components = len(self.compound_names)
+        if self.dippr_nos is None and self.compound_names is None and self.cas_numbers is None:
+            assert self.MWs is not None and self.P_cs is not None, 'Incorrect input'
+        self.MWs = MWs
+        if self.num_components == 0:
+            self.num_components = len(self.MWs)
+        self.P_cs = P_cs
+        self.V_cs = V_cs
+        self.Z_cs = Z_cs
+        self.T_cs = T_cs
+        self.ws = ws
         self.k_ij = k_ij
-        self.w_ij = (self.i.w + self.j.w) / 2.
-        self.T_c_ij = pow(self.i.T_c * self.j.T_c, 0.5) * (1. - self.k_ij)
-        self.Z_c_ij = (self.i.Z_c + self.j.Z_c) / 2.
-        self.V_c_ij = pow(
-            (pow(self.i.V_c, 1 / 3) + pow(self.j.V_c, 1 / 3)) / 2., 3
-        )
-        self.P_c_ij = self.Z_c_ij * self.R * self.T_c_ij / self.V_c_ij
-        self.other_cas = {
-            self.i.cas_number: self.j.cas_number,
-            self.j.cas_number: self.i.cas_number,
-        }
-        self.cas_pairs = []
-        for x in self.other_cas.keys():
-            for y in self.other_cas.values():
-                self.cas_pairs.append((x, y))
+        assert self.num_components > 0, 'Inconsistent input--no components found!'
+        if self.dippr_nos is None:
+            self.dippr_nos = [None for i in range(self.num_components)]
+        if self.compound_names is None:
+            self.compound_names = [None for i in range(self.num_components)]
+        if self.cas_numbers is None:
+            self.cas_numbers = [None for i in range(self.num_components)]
+        if self.MWs is None:
+            self.MWs = [None for i in range(self.num_components)]
+        if self.P_cs is None:
+            self.P_cs = [None for i in range(self.num_components)]
+        if self.V_cs is None:
+            self.V_cs = [None for i in range(self.num_components)]
+        if self.T_cs is None:
+            self.T_cs = [None for i in range(self.num_components)]
+        if self.ws is None:
+            self.ws = [None for i in range(self.num_components)]
+        if self.k_ij is None:
+            self.k_ij = [[None for i in range(self.num_components)] for j in range(self.num_components)]
 
-    def get_w_Tc_Pc(self, cas_i, cas_j=None):
+        self.critical_constants = []
+        for i in range(self.num_components):
+            self.critical_constants.append(
+                CriticalConstants(
+                    dippr_no=self.dippr_nos[i],
+                    compound_name=self.compound_names[i],
+                    cas_number=self.cas_numbers[i],
+                    MW=self.MWs[i],
+                    P_c=self.P_cs[i],
+                    V_c=self.V_cs[i],
+                    Z_c=self.Z_cs[i],
+                    T_c=self.T_cs[i],
+                    w=self.ws[i]
+                )
+            )
+        self.compound_names = [I.compound_name for I in self.critical_constants]
+        self.cas_numbers = [I.cas_number for I in self.critical_constants]
+        self.ws = [I.w for I in self.critical_constants]
+        self.T_cs = [I.T_c for I in self.critical_constants]
+        self.P_cs = [I.P_c for I in self.critical_constants]
+        self.Z_cs = [I.Z_c for I in self.critical_constants]
+        self.V_cs = [I.V_c for I in self.critical_constants]
+        if __debug__ and len(set(self.T_cs)) > 1:
+            assert len(set(self.cas_numbers)) > 1, 'Errors anticipated when cas numbers equal if other props are not'
+
+        for i in range(self.num_components):
+            for j in range(self.num_components):
+                assert abs(self.k_ij[i][j]) < 1e-8, 'K[i][i] must be zero!'
+
+    def get_w_Tc_Pc(self, i: int, j=None):
         """Returns critical constants for calculation based off of whetner i = j or not
 
         :returns: (:math:`w`, :math:`T_c`, :math:`P_c`)
         :rtype: tuple
         """
-        if cas_i == self.i.cas_number and (cas_i == cas_j or cas_j is None):
-            return self.i.w, self.i.T_c, self.i.P_c
-        if cas_i == self.j.cas_number and (cas_i == cas_j or cas_j is None):
-            return self.j.w, self.j.T_c, self.j.P_c
-        if cas_i == self.other_cas[cas_j]:
-            return self.w_ij, self.T_c_ij, self.P_c_ij
+        if j is None or i == j:
+            return self.ws[i], self.T_cs[i], self.P_cs[i]
 
-    def B_ij_expr(self, cas_1, cas_2, T):
+        return (
+            self.w_ij_rule(self.ws[i], self.ws[j]),
+            self.T_cij_rule(self.T_cs[i], self.T_cs[j], k_ij=self.k_ij[i][j]),
+            self.P_cij_rule(
+                self.Z_cs[i], self.V_cs[i], self.T_cs[i],
+                self.Z_cs[j], self.V_cs[j], self.T_cs[j],
+            )
+        )
+
+    def B_ij_expr(self, i: int, j: int, T):
         r"""
-        Returns :math:`B_{ij}` considering that :code:`i=j` or :code:`i!=j`
 
-        If :code:`i=j`, find the component :math:`k` for which :code:`k=i=j` (all cas no's equal).
-        Then return :math:`B_{kk}` where
-
-        .. math::
-            B_{kk}=\frac{RT_{\mathrm{c},k}}{P_{\mathrm{c},k}}\left[
-            B^0\left(\frac{T}{T_{\mathrm{c},k}}\right) + \omega_k\left(\frac{T}{T_{\mathrm{c},k}}\right)
-            \right]
-
-        Otherwise, if :code:`i!=j`, return :math:`B_{ij}`, where
-
-        .. math::
-            B_{ij}=\frac{RT_{\mathrm{c},ij}}{P_{\mathrm{c},ij}}\left[
-            B^0\left(\frac{T}{T_{\mathrm{c},ij}}\right) + \omega_{ij}\left(\frac{T}{T_{\mathrm{c},ij}}\right)
-            \right]
-
-        This is implemented in a simplified fashion usintg :meth:`BinarySecondVirial.get_w_Tc_Pc`
-        and then calling the generic expression for :math:`B`
-
-
-        :param cas_1: cas number of first component
-        :type cas_1: str
-        :param cas_2: cas number of second component
-        :type cas_2: str
+        :param i: index of first component
+        :param j: index of second component
         :param T: temperature [K]
+        :returns: Equation :eq:`B_ij_expr`
         """
-        w, T_c, P_c = self.get_w_Tc_Pc(cas_1, cas_2)
+        w, T_c, P_c = self.get_w_Tc_Pc(i, j)
         T_r = T / T_c
         return self.B_expr(T_r, w, T_c, P_c)
 
-    def B_mix_expr(self, y_k, T):
+    def B_mix_expr(self, y_k: typing.List[typing.Union[float, typing.Any]], T):
         """
 
         :param y_k: mole fractions of each component :math:`k`
-        :type y_k: dict[:attr:`cas_numbers`, float]
         :param T: temperature in K
-        :return: :math:`B` [m^3/mol], where :math:`Z = 1 + BP/R/T`
+        :returns: Equation :eq:`B_mix_expr`
         """
         return sum(
-            y_k[i] * y_k[j] * self.B_ij_expr(i, j, T) for i, j in self.cas_pairs
+            y_k[i] * y_k[j] * self.B_ij_expr(i, j, T) for i in range(self.num_components) for j in
+            range(self.num_components)
         )
 
-    def calc_Z(self, y_k, P, T):
+    def calc_Z_from_units(self, y_k: typing.List, P, T):
         """
 
         :param y_k: mole fractions of each component :math:`k`
-        :type y_k: dict
         :param P: pressure in Pa
         :param T: temperature in K
-        :return: :math:`Z` [mol/m^3], where :math:`Z = 1 + BP/R/T`
+        :return: Equation :eq:`z_virial`
         """
         return 1. + self.B_mix_expr(y_k, T) * P / self.R / T
 
-    def d_ij_expr(self, T):
+    def d_ik_expr(self, i: int, k: int, T):
         """
-        .. math::
-            \\delta_{ij} = 2B_{ij} - B_{ii} - B_{jj}
-            :label: eq_dij
 
+        :param i: index of component *i*
+        :param k: index of component *k*
         :param T: temperature [K]
-        :return: :math:`\\delta_{ij}` [m**3/mol]
+        :return: Equation :eq:`d_ik`
         """
-        return 2. * self.B_ij_expr(self.i.cas_number, self.j.cas_number, T) \
-               - self.B_ij_expr(self.i.cas_number, self.i.cas_number, T) \
-               - self.B_ij_expr(self.j.cas_number, self.j.cas_number, T)
+        if i == k:
+            return 0.
 
-    def ln_hat_phi_i_expr(self, cas_i, y_i, P, T):
+        return 2. * self.B_ij_expr(i, k, T) - self.B_ij_expr(i, i, T) - self.B_ij_expr(k, k, T)
+
+    def ln_hat_phi_k_expr(self, k: int, ys: typing.List[typing.Union[float, typing.Any]], P, T):
         r"""logarithm of fugacity coefficient
 
-        .. math::
-            \ln\hat{\phi}_i = \frac{P}{RT}\left[B_{ii} + (1-y_i)^2\delta_{ij}\right]
-
-        :param cas_i: cas number for component of interest
-        :type cas_i: str
-        :param y_i: mole fraction of component of interest
-        :type y_i: float
+        :param k: index of component *k*
+        :param ys: mole fractions
         :param P: pressure in Pa
-        :type P: float
         :param T: temperature in K
-        :type T: float
-
-        where :math:`\delta_{ij}` is given by Equation :eq:`eq_dij`
+        :returns: Equation :eq:`ln_phi_i_virial`
         """
-        return P * (
-                self.B_ij_expr(cas_i, cas_i, T) - (1. - y_i) * (1. - y_i) * self.d_ij_expr(T)
-        ) / self.R / T
+        return P / R / T * (
+                self.B_ij_expr(k, k, T)
+            + 1./2.*sum(
+            ys[i]*ys[j]*(2.*self.d_ik_expr(i, k, T) - self.d_ik_expr(i, j, T))
+            for i in range(self.num_components) for j in range(self.num_components)
+        )
+        )
 
-    def fugacity_i_expr(self, cas_i, y_i, P, T):
+    def fugacity_i_expr(self, cas_i: str, ys: typing.List[typing.Union[float, typing.Any]], P, T):
         r"""Fugacity of component i in mixture :math:`f_i=\hat{\phi}_i y_i P`
 
         :param cas_i: cas number for component of interest
-        :type cas_i: str
-        :param y_i: mole fraction of component of interest
-        :type y_i: float
+        :param ys: mole fractions
         :param P: pressure in Pa
-        :type P: float
         :param T: temperature in K
-        :type T: float
         """
-        return self.hat_phi_i_expr(cas_i, y_i, P, T) * y_i * P
+        assert cas_i in self.cas_numbers, 'Cas number not found!'
+        i = self.cas_numbers.index(cas_i)
+        return self.hat_phi_i_expr(i, ys, P, T) * ys[i] * P
 
-    def bar_GiR_RT(self, *args):
+    def bar_GiR_RT(self, k: int, ys: typing.List[typing.Union[float, typing.Any]], P, T):
         r"""Dimensionless residual partial molar free energy of component :math:`i`
 
         .. math::
@@ -517,24 +595,36 @@ class BinarySecondVirial(CriticalConstants, Virial):
             :label: eq_GiR
 
         """
-        return self.ln_hat_phi_i_expr(*args)
+        return self.ln_hat_phi_k_expr(k, ys, P, T)
 
-    def d_Bij_d_Tr(self, cas_i, cas_j, T):
-        w, T_c, P_c = self.get_w_Tc_Pc(cas_i, cas_j)
+    def d_Bij_d_Trij(self, i: int, j: int, T):
+        """
+
+        :param i: index for component *i*
+        :param j: index for componen t *j*
+        :param T: temperature in K
+        :return: Equation :eq:`dB_dTrij`
+        """
+        w, T_c, P_c = self.get_w_Tc_Pc(i, j)
         T_r = T / T_c
-        return self.R * T_c / P_c * (self.d_B0_d_Tr_expr(T_r) + w * self.d_B1_d_Tr_expr(T_r))
+        return R * T_c / P_c * (self.d_B0_d_Tr_expr(T_r) + w * self.d_B1_d_Tr_expr(T_r))
 
-    def d_dij_d_Tr(self, T):
+    def d_dij_d_Tr(self, i, j, T):
         r"""
         .. math::
-            \frac{\partial \delta_{ij}}{\partial T_r} = 2\frac{\partial B_{ij}}{\partial T_r}-\frac{\partial B_{ii}}{\partial T_r}-\frac{\partial B_{jj}}{\partial T_r}
+            \frac{\partial \delta_{ij}}{\partial T_{\text{r}ij}} = 2\frac{\partial B_{ij}}{\partial T_{\text{r}ij}}-\frac{\partial B_{ii}}{\partial T_{\text{r}ij}}-\frac{\partial B_{jj}}{\partial T_{\text{r}ij}}
             :label: eq_d_dij
 
+        .. todo::
+            test this with symbolic differentiation of d_ik expression
+
+        :param i: index for component *i*
+        :param j: index for componen t *j*
         :param T: temperature [K]
         """
-        return 2. * self.d_Bij_d_Tr(self.i.cas_number, self.j.cas_number, T) \
-               - self.d_Bij_d_Tr(self.i.cas_number, self.i.cas_number, T) \
-               - self.d_Bij_d_Tr(self.j.cas_number, self.j.cas_number, T)
+        return 2. * self.d_Bij_d_Trij(i, j, T) \
+               - self.d_Bij_d_Trij(i, i, T) \
+               - self.d_Bij_d_Trij(j, j, T)
 
     def Tstar_d_lnphi_dTstar(self, cas_i, y_i, P, T):
         r"""Returns
@@ -605,8 +695,8 @@ class BinarySecondVirial(CriticalConstants, Virial):
         :type T: float
         """
         w, T_c, P_c = self.get_w_Tc_Pc(cas_i)
-        return -P / self.R / T_c * (self.d_Bij_d_Tr(cas_i, cas_i, T) + (1. - y_i) * (1. - y_i) * self.d_dij_d_Tr(
-            T)) + self.ln_hat_phi_i_expr(cas_i, y_i, P, T)
+        return -P / self.R / T_c * (self.d_Bij_d_Trij(cas_i, cas_i, T) + (1. - y_i) * (1. - y_i) * self.d_dij_d_Tr(
+            T)) + self.ln_hat_phi_k_expr(cas_i, y_i, P, T)
 
     def bar_SiR_R(self, cas_i, y_i, P, T):
         r"""Dimensionless residual partial molar entropy of component :math:`i`
@@ -644,7 +734,7 @@ class BinarySecondVirial(CriticalConstants, Virial):
         """
         w, T_c, P_c = self.get_w_Tc_Pc(cas_i)
         return -P / self.R / T_c * (
-                self.d_Bij_d_Tr(cas_i, cas_i, T) + (1. - y_i) * (1. - y_i) * self.d_dij_d_Tr(T)
+                self.d_Bij_d_Trij(cas_i, cas_i, T) + (1. - y_i) * (1. - y_i) * self.d_dij_d_Tr(T)
         )
 
     def bar_ViR_RT(self, cas_i, y_i, P, T):
@@ -669,7 +759,7 @@ class BinarySecondVirial(CriticalConstants, Virial):
         :type T: float
         :return: :math:`\bar{V}_i^\mathrm{R}/R/T`
         """
-        return (self.B_ij_expr(cas_i, cas_i, T) + (1 - y_i) * (1 - y_i) * self.d_ij_expr(T)) / self.R / T
+        return (self.B_ij_expr(cas_i, cas_i, T) + (1 - y_i) * (1 - y_i) * self.d_ik_expr(T)) / self.R / T
 
     def X_R_dimensionless(self, method: callable, cas_i: str, y_i: float, P: float, T: float):
         """Residual property of :math:`X` for mixture.

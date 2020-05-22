@@ -16,22 +16,18 @@ class CriticalConstants:
     :param cas_number: CAS registry number for chemical compound, defaults to None
     :type cas_number: str, optional
     :param MW: molecular weight in g/mol
-    :type MW: float, derived from input
     :param T_c: critical temperature [K]
-    :type T_c: float, derived from input
     :param P_c: critical pressure [Pa]
-    :type P_c: float, derived from input
     :param V_c: critical molar volume [m^3/mol]
-    :type V_c: float, derived from input
     :param Z_c: critical compressibility factor [dimensionless]
-    :type Z_c: float, derived from input
     :param w: accentric factor [dimensionless]
-    :type w: float, derived from input
     :param tol: tolerance for percent difference in Zc calulcated and tabulated, set to 0.5
     :type tol: float, hard-coded
     """
 
-    def __init__(self, dippr_no: str = None, compound_name: str = None, cas_number: str = None, **kwargs):
+    def __init__(self, dippr_no: str = None, compound_name: str = None, cas_number: str = None,
+                 MW: float=None, P_c: float=None, V_c: float=None, Z_c: float=None,
+                 T_c: float=None, w: float=None):
         file = os.path.join(ROOT_DIR, 'critical_constants.csv')
         my_header = [
             'Cmpd. no.', 'Name', 'Formula', 'CAS no.', 'Mol. wt. [g/mol]',
@@ -41,13 +37,12 @@ class CriticalConstants:
         self.dippr_no = dippr_no
         self.compound_name = compound_name
         self.cas_number = cas_number
-
-        self.MW = kwargs.pop('MW', None)
-        self.P_c = kwargs.pop('P_c', None)
-        self.V_c = kwargs.pop('V_c', None)
-        self.Z_c = kwargs.pop('Z_c', None)
-        self.T_c = kwargs.pop('T_c', None)
-        self.w = kwargs.pop('w', None)
+        self.MW = MW
+        self.P_c = P_c
+        self.V_c = V_c
+        self.Z_c = Z_c
+        self.T_c = T_c
+        self.w = w
 
         self.tol = 0.5
 

@@ -9,5 +9,11 @@ Virial Equation of State
 .. autoclass:: src.gasthermo.eos.virial.SecondVirial
     :members:
 
-.. autoclass:: src.gasthermo.eos.virial.BinarySecondVirial
+Mixtures
+--------
+
+.. autoclass:: src.gasthermo.eos.virial.MixingRule
+    :members:
+
+.. autoclass:: src.gasthermo.eos.virial.SecondVirialMixture
     :members:
