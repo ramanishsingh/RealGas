@@ -2,10 +2,10 @@ Vapor Thermal Conductivity
 ==========================
 
 
-.. automodule:: src.gasthermo.thermal_conductivity
+.. automodule:: gasthermo.thermal_conductivity
 
-.. autoclass:: src.gasthermo.thermal_conductivity.ThermalConductivity
+.. autoclass:: gasthermo.thermal_conductivity.ThermalConductivity
     :members:
 
-.. autoclass:: src.gasthermo.thermal_conductivity.ThermalConductivityMixture
+.. autoclass:: gasthermo.thermal_conductivity.ThermalConductivityMixture
     :members:

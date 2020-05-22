@@ -1,6 +1,7 @@
 import numpy as np
-from src.gasthermo.eos.cubic import PengRobinson
-from src.gasthermo.eos.virial import SecondVirial, SecondVirialMixture
+
+from gasthermo.eos.cubic import PengRobinson
+from gasthermo.eos.virial import SecondVirial, SecondVirialMixture
 from tests.test_cp_ig import compounds_to_test
 
 

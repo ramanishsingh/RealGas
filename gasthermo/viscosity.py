@@ -1,6 +1,7 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from chem_util.math import percent_difference
+
 from . import os, ROOT_DIR
 
 
@@ -100,8 +101,8 @@ class Viscosity:
         y = self.eval(self.T_fit)
         self.coeffs = np.polyfit(self.T_fit, y, self.poly_order)
 
-        ssxm, ssxym, ssyxm, ssym = np.cov(self.T_fit, y, bias=1).flat
-        self.R2 = ssxym*ssxym / (ssxm*ssym)
+        ssxm, ssxym, ssyxm, ssym = np.cov(self.T_fit, y, bias=True).flat
+        self.R2 = ssxym * ssxym / (ssxm * ssym)
         assert self.R2 > 0.98, 'Poor fit to polynomial, R2 is only %3.2f' % self.R2
 
         self.mu = np.poly1d(self.coeffs)

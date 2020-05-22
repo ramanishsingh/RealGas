@@ -1,19 +1,19 @@
 Virial Equation of State
 ========================
 
-.. automodule:: src.gasthermo.eos.virial
+.. automodule:: gasthermo.eos.virial
 
-.. autoclass:: src.gasthermo.eos.virial.Virial
+.. autoclass:: gasthermo.eos.virial.Virial
     :members:
 
-.. autoclass:: src.gasthermo.eos.virial.SecondVirial
+.. autoclass:: gasthermo.eos.virial.SecondVirial
     :members:
 
 Mixtures
 --------
 
-.. autoclass:: src.gasthermo.eos.virial.MixingRule
+.. autoclass:: gasthermo.eos.virial.MixingRule
     :members:
 
-.. autoclass:: src.gasthermo.eos.virial.SecondVirialMixture
+.. autoclass:: gasthermo.eos.virial.SecondVirialMixture
     :members:

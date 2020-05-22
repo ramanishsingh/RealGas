@@ -1,5 +1,6 @@
-from chem_util.math import percent_difference
 from chem_util.chem_constants import gas_constant
+from chem_util.math import percent_difference
+
 from . import os, ROOT_DIR
 
 
@@ -26,8 +27,11 @@ class CriticalConstants:
     """
 
     def __init__(self, dippr_no: str = None, compound_name: str = None, cas_number: str = None,
-                 MW: float=None, P_c: float=None, V_c: float=None, Z_c: float=None,
-                 T_c: float=None, w: float=None):
+                 MW: float = None, P_c: float = None, V_c: float = None, Z_c: float = None,
+                 T_c: float = None, w: float = None):
+        """
+
+        """
         file = os.path.join(ROOT_DIR, 'critical_constants.csv')
         my_header = [
             'Cmpd. no.', 'Name', 'Formula', 'CAS no.', 'Mol. wt. [g/mol]',

@@ -1,8 +1,10 @@
-import numpy as np
 import logging
+
 import matplotlib.pyplot as plt
-from chem_util.math import percent_difference
+import numpy as np
 from chem_util.chem_constants import gas_constant
+from chem_util.math import percent_difference
+
 from . import os, ROOT_DIR
 
 

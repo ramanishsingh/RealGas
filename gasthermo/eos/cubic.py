@@ -103,14 +103,12 @@ Mixtures
 
 """
 
-try:
-    from ..critical_constants import CriticalConstants
-except ImportError:
-    from src.gasthermo.critical_constants import CriticalConstants
-from chem_util.math import percent_difference
-from chem_util.chem_constants import gas_constant as R
 import matplotlib.pyplot as plt
 import numpy as np
+from chem_util.chem_constants import gas_constant as R
+from chem_util.math import percent_difference
+
+from ..critical_constants import CriticalConstants
 
 
 class Cubic(CriticalConstants):
@@ -128,7 +126,7 @@ class Cubic(CriticalConstants):
 
     def __init__(self, sigma: float, epsilon: float, Omega: float, Psi: float,
                  dippr_no: str = None, compound_name: str = None, cas_number: str = None,
-                 log: callable = np.log, exp: callable = np.exp,
+                 log: callable = np.log, exp: callable = np.exp, name: str = 'cubic',
                  **kwargs):
         """
 
@@ -143,6 +141,7 @@ class Cubic(CriticalConstants):
         self.tol = 0.01
         self.log = log
         self.exp = exp
+        self.name = name
 
     """Expressions"""
 
@@ -399,7 +398,7 @@ class RedlichKwong(Cubic):
     ===========================       ==============================
 
 
-    >>> from src.gasthermo.eos.cubic import RedlichKwong
+    >>> from gasthermo.eos.cubic import RedlichKwong
     >>> model = RedlichKwong(compound_name='Propane')
     >>> model.sigma
     1
@@ -413,8 +412,7 @@ class RedlichKwong(Cubic):
     """
 
     def __init__(self, **kwargs):
-        Cubic.__init__(self, sigma=1, epsilon=0, Omega=0.08664, Psi=0.42748, **kwargs)
-        self.name = 'RK'
+        Cubic.__init__(self, sigma=1, epsilon=0, Omega=0.08664, Psi=0.42748, name='RK', **kwargs)
 
     def alpha_expr(self, T_r):
         return 1 / T_r ** 0.5
@@ -444,7 +442,7 @@ class SoaveRedlichKwong(RedlichKwong):
         f_w = 0.480 + 1.574\omega - 0.176\omega^2
         :label: f_w_SRK
 
-    >>> from src.gasthermo.eos.cubic import SoaveRedlichKwong
+    >>> from gasthermo.eos.cubic import SoaveRedlichKwong
     >>> model = SoaveRedlichKwong(compound_name='Water')
     >>> model.Omega
     0.08664
@@ -464,8 +462,7 @@ class SoaveRedlichKwong(RedlichKwong):
     """
 
     def __init__(self, **kwargs):
-        RedlichKwong.__init__(self, **kwargs)
-        self.name = 'S' + self.name
+        Cubic.__init__(self, sigma=1, epsilon=0, Omega=0.08664, Psi=0.42748, name='SRK', **kwargs)
         self.f_w = self.f_w_rule(self.w)
 
     def f_w_rule(self, w):
@@ -508,7 +505,7 @@ class PengRobinson(SoaveRedlichKwong):
         f_w = 0.480 + 1.574\omega - 0.176\omega^2
         :label: f_w_PR
 
-    >>> from src.gasthermo.eos.cubic import PengRobinson
+    >>> from gasthermo.eos.cubic import PengRobinson
     >>> model = PengRobinson(compound_name='Water')
     >>> model.Omega
     0.0778
@@ -528,8 +525,8 @@ class PengRobinson(SoaveRedlichKwong):
     """
 
     def __init__(self, **kwargs):
-        Cubic.__init__(self, sigma=1 + np.sqrt(2), epsilon=1 - np.sqrt(2), Omega=0.07780, Psi=0.45724, **kwargs)
-        self.name = 'PR'
+        Cubic.__init__(self, sigma=1 + np.sqrt(2), epsilon=1 - np.sqrt(2), Omega=0.07780, Psi=0.45724, name='PR',
+                       **kwargs)
         self.f_w = self.f_w_rule(self.w)
 
     def f_w_rule(self, w):

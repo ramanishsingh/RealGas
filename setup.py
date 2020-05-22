@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gasthermo",
-    version="0.0.5",
+    version="0.0.6",
     author="Robert F. De Jaco",
     author_email="dejac001@umn.edu",
     description="Gas-Phase Thermodynamics in Python",
@@ -21,7 +21,6 @@ setuptools.setup(
         "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
         "Operating System :: OS Independent",
     ],
-    package_dir={'': 'src'},
     python_requires='>=3.6',
     install_requires=["matplotlib==3.2.1", "numpy==1.18.4", "scipy==1.4.1", 'chem-util==0.0.4']
 )

@@ -1,7 +1,5 @@
-
-
 Examples
 ========
 
-.. automodule:: src.gasthermo
+.. automodule:: gasthermo
 

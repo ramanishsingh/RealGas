@@ -12,8 +12,8 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../'))
 
+sys.path.insert(0, os.path.abspath('../../'))
 
 # -- Project information -----------------------------------------------------
 
@@ -22,9 +22,8 @@ copyright = '2020, Robert F. De Jaco'
 author = 'Robert F. De Jaco'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.5'
-version = '0.0.5'
-
+release = '0.0.6'
+version = '0.0.6'
 
 # -- General configuration ---------------------------------------------------
 

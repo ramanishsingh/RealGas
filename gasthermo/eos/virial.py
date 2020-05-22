@@ -212,11 +212,13 @@ from which we obtain the intuitive result of
 
 """
 
-from ..critical_constants import CriticalConstants
 import typing
-from chem_util.chem_constants import gas_constant as R
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
+from chem_util.chem_constants import gas_constant as R
+
+from ..critical_constants import CriticalConstants
 
 
 class Virial:
@@ -446,7 +448,6 @@ class MixingRule(Virial):
         :param T_ci: critical temperature of component i [K]
         :param T_cj: ** j [K]
         :param k_ij: k_ij parameter
-        :param pow: function to calculate sqrt f(args, 0.5)
         :return: Equation :eq:`Tc_combine`
         """
         return pow(T_ci * T_cj, 0.5) * (1. - k_ij)
@@ -475,7 +476,6 @@ class MixingRule(Virial):
 
         :param V_ci: critical molar volume of component *i* [m**3/mol]
         :param V_cj: critical molar volume of component *j* [m**3/mol]
-        :param mypow: function to calculate power
         :return: Equation eq:`Vc_combine`
         """
         return self.pow(
@@ -486,8 +486,8 @@ class MixingRule(Virial):
 class SecondVirialMixture(MixingRule):
     r"""Second virial with mixing rule from :class:`.MixingRule`
 
-
-
+    .. note::
+        can only input both custom critical properties or both from DIPPR--cant have mixed at the moment
 
     :param num_components: number of components
     :type num_components: int
@@ -510,13 +510,9 @@ class SecondVirialMixture(MixingRule):
     :param k_ij: equation of state mixing rule in calculation of critical temperautre, see Equation :eq:`Tc_combine`. When :math:`i=j` and for chemical similar species, :math:`k_{ij}=0`. Otherwise, it is a small (usually) positive number evaluated from minimal :math:`PVT` data or, in the absence of data, set equal to zero.
     :type k_ij: typing.List[typing.List[float]]
 
-
-    .. note::
-        can only input both custom critical properties or both from DIPPR--cant have mixed at the moment
-
     """
 
-    def __init__(self,
+    def __init__(self, num_components=0,
                  dippr_nos: typing.List[str] = None,
                  compound_names: typing.List[str] = None,
                  cas_numbers: typing.List[str] = None,
@@ -529,7 +525,7 @@ class SecondVirialMixture(MixingRule):
                  k_ij: typing.Union[float, typing.List[float]] = None,
                  pow: callable = np.power, exp: callable = np.exp):
         MixingRule.__init__(self, pow, exp)
-        self.num_components = 0
+        self.num_components = num_components
         if dippr_nos is not None:
             self.num_components = len(dippr_nos)
         if compound_names is not None:
