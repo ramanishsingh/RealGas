@@ -1,7 +1,7 @@
 r"""
 
 .. todo::
-    merge docs with those in :code:`gasthermo.partial_molar_properties`.
+    merge docs with those in :code:`realgas.partial_molar_properties`.
     There, the definitions of residual properties are displayed and here wee need only
     write simplified forms for the specific equation of state.
 

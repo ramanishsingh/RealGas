@@ -8,7 +8,7 @@ import logging
 import numpy as np
 
 logging.basicConfig(level=logging.DEBUG)
-from gasthermo.cp import CpIdealGas, CpStar, CpRawData, CpStarRawData
+from realgas.cp import CpIdealGas, CpStar, CpRawData, CpStarRawData
 from chem_util.math import percent_difference
 
 compounds_to_test = ['Butane', 'Carbon dioxide', 'Carbon monoxide',

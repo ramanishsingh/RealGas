@@ -1,7 +1,7 @@
 import numpy as np
 
-from gasthermo.eos.cubic import PengRobinson
-from gasthermo.eos.virial import SecondVirial, SecondVirialMixture
+from realgas.eos.cubic import PengRobinson
+from realgas.eos.virial import SecondVirial, SecondVirialMixture
 from tests.test_cp_ig import compounds_to_test
 from chem_util.chem_constants import gas_constant as R
 

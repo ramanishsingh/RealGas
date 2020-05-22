@@ -398,7 +398,7 @@ class RedlichKwong(Cubic):
     ===========================       ==============================
 
 
-    >>> from gasthermo.eos.cubic import RedlichKwong
+    >>> from realgas.eos.cubic import RedlichKwong
     >>> model = RedlichKwong(compound_name='Propane')
     >>> model.sigma
     1
@@ -442,7 +442,7 @@ class SoaveRedlichKwong(RedlichKwong):
         f_w = 0.480 + 1.574\omega - 0.176\omega^2
         :label: f_w_SRK
 
-    >>> from gasthermo.eos.cubic import SoaveRedlichKwong
+    >>> from realgas.eos.cubic import SoaveRedlichKwong
     >>> model = SoaveRedlichKwong(compound_name='Water')
     >>> model.Omega
     0.08664
@@ -505,7 +505,7 @@ class PengRobinson(SoaveRedlichKwong):
         f_w = 0.480 + 1.574\omega - 0.176\omega^2
         :label: f_w_PR
 
-    >>> from gasthermo.eos.cubic import PengRobinson
+    >>> from realgas.eos.cubic import PengRobinson
     >>> model = PengRobinson(compound_name='Water')
     >>> model.Omega
     0.0778

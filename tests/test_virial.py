@@ -1,6 +1,6 @@
 import numpy as np
 
-from gasthermo.eos import virial
+from realgas.eos import virial
 
 
 def test_correlation_coeffs():

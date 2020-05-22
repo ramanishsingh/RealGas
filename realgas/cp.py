@@ -6,7 +6,7 @@ import numpy as np
 from chem_util.chem_constants import gas_constant
 from chem_util.math import percent_difference
 
-from gasthermo import os, ROOT_DIR
+from realgas import os, ROOT_DIR
 
 
 class CpIdealGas:

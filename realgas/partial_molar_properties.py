@@ -152,11 +152,11 @@ In this package, the second-order virial equation of state currently implements 
 """
 
 
-from gasthermo.eos.virial import SecondVirialMixture
-import gasthermo.input as inp
-from gasthermo.cp import CpIdealGas, CpStar
+from realgas.eos.virial import SecondVirialMixture
+import realgas.input as inp
+from realgas.cp import CpIdealGas, CpStar
 from chem_util.chem_constants import gas_constant as R
-from gasthermo.input import IdealMixture
+from realgas.input import IdealMixture
 import numpy as np
 import typing
 
@@ -165,7 +165,7 @@ class Mixture(SecondVirialMixture):
     """
     :param ideal: whether or not ideal gas, defaults to True
     :type ideal: bool, optional
-    :param kwargs: key-word arguments for :class:`gasthermo.eos.virial.SecondVirialMixture`
+    :param kwargs: key-word arguments for :class:`realgas.eos.virial.SecondVirialMixture`
 
 
     """
@@ -240,7 +240,7 @@ class MixtureDimensionless(SecondVirialMixture):
 
     :param ideal: whether or not ideal gas, defaults to True
     :type ideal: bool, optional
-    :param kwargs: key-word arguments for :class:`gasthermo.eos.virial.SecondVirialMixture`
+    :param kwargs: key-word arguments for :class:`realgas.eos.virial.SecondVirialMixture`
     """
 
     def __init__(self, cp_args: typing.List[dict], ideal=True, **kwargs):

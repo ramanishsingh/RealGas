@@ -6,6 +6,34 @@ Heat Capacity
 Determine the temperature dependence of the ideal gas heat capacity, :math:`C_\text{p}^\text{IG}` for water
 
 >>> import matplotlib.pyplot as plt
+>>> from realgas.cp import CpIdealGas
+>>> I = CpIdealGas(compound_name='Air', T_min_fit=250., T_max_fit=800., poly_order=3)
+>>> I.eval(300.), I.Cp_units
+(29.00369, 'J/mol/K')
+>>> I.eval(300.)/I.MW
+1.001508
+>>> # we can then plot and visualize the resutls
+>>> fig, ax = I.plot()
+>>> fig.savefig('docs/source/air.png')
+>>> del I
+
+And we will get something that looks like the following
+
+>>> import matplotlib.pyplot as plt
+>>> from realgas.cp import CpIdealGas
+>>> I = CpIdealGas(compound_name='Air', T_min_fit=250., T_max_fit=800., poly_order=3)
+>>> I.eval(300.), I.Cp_units
+(29.00369, 'J/mol/K')
+>>> I.eval(300.)/I.MW
+1.001508
+>>> # we can then plot and visualize the resutls
+>>> fig, ax = I.plot()
+>>> fig.savefig('docs/source/air.png')
+>>> del I
+
+And we will get something that looks like the following
+
+>>> import matplotlib.pyplot as plt
 >>> from gasthermo.cp import CpIdealGas
 >>> I = CpIdealGas(compound_name='Air', T_min_fit=250., T_max_fit=800., poly_order=3)
 >>> I.eval(300.), I.Cp_units
@@ -22,6 +50,34 @@ And we will get something that looks like the following
 .. image:: air.png
 
 and we notice that the polynomial (orange dashed lines) fits the hyperbolic function well.
+
+Automatically tries to raise errors if fit is not good enough:
+
+
+>>> from realgas.cp import CpIdealGas
+>>> I = CpIdealGas(compound_name='Methane')
+Traceback (most recent call last):
+    ...
+Exception: Fit is too poor (not in (0.99,1)) too large!
+Try using a smaller temperature range for fitting
+and/or increasing the number of fitting points and polynomial degree.
+See error path in error-*dir
+
+This will lead to an error directory with a figure saved in it that looks like the following:
+
+Automatically tries to raise errors if fit is not good enough:
+
+
+>>> from realgas.cp import CpIdealGas
+>>> I = CpIdealGas(compound_name='Methane')
+Traceback (most recent call last):
+    ...
+Exception: Fit is too poor (not in (0.99,1)) too large!
+Try using a smaller temperature range for fitting
+and/or increasing the number of fitting points and polynomial degree.
+See error path in error-*dir
+
+This will lead to an error directory with a figure saved in it that looks like the following:
 
 Automatically tries to raise errors if fit is not good enough:
 
@@ -60,7 +116,26 @@ Which leads to a much better fit, as shown below
 Cubic Equations of State
 ************************
 
->>> from gasthermo.eos.cubic import PengRobinson, RedlichKwong, SoaveRedlichKwong
+>>> from realgas.eos.cubic import PengRobinson, RedlichKwong, SoaveRedlichKwong
+>>> P = 8e5  # Pa
+>>> T = 300. # K
+>>> PengRobinson(compound_name='Propane').iterate_to_solve_Z(P=P, T=T)
+0.85682
+>>> RedlichKwong(compound_name='Propane').iterate_to_solve_Z(P=P, T=T)
+0.87124
+>>> cls_srk = SoaveRedlichKwong(compound_name='Propane')
+>>> Z = cls_srk.iterate_to_solve_Z(P=P, T=T)
+>>> Z
+0.86528
+>>> # calculate residual properties
+>>> from chem_util.chem_constants import gas_constant as R
+>>> V = Z*R*T/P
+>>> cls_srk.S_R_R_expr(P, V, T)
+-0.30028
+>>> cls_srk.H_R_RT_expr(P, V, T)
+-0.42714
+>>> cls_srk.G_R_RT_expr(P, V, T) - cls_srk.H_R_RT_expr(P, V, T) + cls_srk.S_R_R_expr(P, V, T)
+0.0
 >>> P = 8e5  # Pa
 >>> T = 300. # K
 >>> PengRobinson(compound_name='Propane').iterate_to_solve_Z(P=P, T=T)
@@ -84,7 +159,10 @@ Cubic Equations of State
 Virial Equation of State
 ************************
 
->>> from gasthermo.eos.virial import SecondVirial
+>>> from realgas.eos.virial import SecondVirial
+>>> Iv2 = SecondVirial(compound_name='Propane')
+>>> Iv2.calc_Z_from_units(P=8e5, T=300.)
+0.87260
 >>> Iv2 = SecondVirial(compound_name='Propane')
 >>> Iv2.calc_Z_from_units(P=8e5, T=300.)
 0.87260
@@ -92,6 +170,74 @@ Virial Equation of State
 Other Utilities
 ***************
 Determine whether a single real root of the cubic equation of state can be used for
+simple computational implementation.
+In some regimes, the cubic equation of state only has 1 real root--in this case, the compressibility
+factor can be obtained easily.
+
+>>> from gasthermo.eos.cubic import PengRobinson
+>>> pr = PengRobinson(compound_name='Propane')
+>>> pr.num_roots(300., 5e5)
+3
+>>> pr.num_roots(100., 5e5)
+1
+
+Input custom thermodynamic critical properties
+
+>>> from realgas.eos.cubic import PengRobinson
+>>> dippr = PengRobinson(compound_name='Methane')
+>>> custom = PengRobinson(compound_name='Methane', cas_number='72-28-8',
+...                       T_c=191.4, V_c=0.0001, Z_c=0.286, w=0.0115, MW=16.042, P_c=0.286
+simple computational implementation.
+In some regimes, the cubic equation of state only has 1 real root--in this case, the compressibility
+factor can be obtained easily.
+
+>>> from gasthermo.eos.cubic import PengRobinson
+>>> pr = PengRobinson(compound_name='Propane')
+>>> pr.num_roots(300., 5e5)
+3
+>>> pr.num_roots(100., 5e5)
+1
+
+Input custom thermodynamic critical properties
+
+>>> from realgas.eos.cubic import PengRobinson
+>>> dippr = PengRobinson(compound_name='Methane')
+>>> custom = PengRobinson(compound_name='Methane', cas_number='72-28-8',
+...                       T_c=191.4, V_c=0.0001, Z_c=0.286, w=0.0115, MW=16.042, P_c=0.286
+simple computational implementation.
+In some regimes, the cubic equation of state only has 1 real root--in this case, the compressibility
+factor can be obtained easily.
+
+>>> from realgas.eos.cubic import PengRobinson
+>>> pr = PengRobinson(compound_name='Propane')
+>>> pr.num_roots(300., 5e5)
+3
+>>> pr.num_roots(100., 5e5)
+1
+
+Input custom thermodynamic critical properties
+
+>>> from gasthermo.eos.cubic import PengRobinson
+>>> dippr = PengRobinson(compound_name='Methane')
+>>> custom = PengRobinson(compound_name='Methane', cas_number='72-28-8',
+...                       T_c=191.4, V_c=0.0001, Z_c=0.286, w=0.0115, MW=16.042, P_c=0.286
+simple computational implementation.
+In some regimes, the cubic equation of state only has 1 real root--in this case, the compressibility
+factor can be obtained easily.
+
+>>> from realgas.eos.cubic import PengRobinson
+>>> pr = PengRobinson(compound_name='Propane')
+>>> pr.num_roots(300., 5e5)
+3
+>>> pr.num_roots(100., 5e5)
+1
+
+Input custom thermodynamic critical properties
+
+>>> from gasthermo.eos.cubic import PengRobinson
+>>> dippr = PengRobinson(compound_name='Methane')
+>>> custom = PengRobinson(compound_name='Methane', cas_number='72-28-8',
+...                       T_c=191.4, V_c=0.0001, Z_c=0.286, w=0.0115, MW=16.042, P_c=0.286
 simple computational implementation.
 In some regimes, the cubic equation of state only has 1 real root--in this case, the compressibility
 factor can be obtained easily.
@@ -117,6 +263,14 @@ Input custom thermodynamic critical properties
 
 If we accidentally input the wrong custom units,
 it is likely that :class:`gasthermo.critical_constants.CriticalConstants` will catch it.
+
+>>> from realgas.eos.cubic import PengRobinson
+>>> PengRobinson(compound_name='Methane', cas_number='72-28-8',
+...                       T_c=273.-191.4, V_c=0.0001, Z_c=0.286, w=0.0115, MW=16.042, P_c=0.286
+
+>>> from realgas.eos.cubic import PengRobinson
+>>> PengRobinson(compound_name='Methane', cas_number='72-28-8',
+...                       T_c=273.-191.4, V_c=0.0001, Z_c=0.286, w=0.0115, MW=16.042, P_c=0.286
 
 >>> from gasthermo.eos.cubic import PengRobinson
 >>> PengRobinson(compound_name='Methane', cas_number='72-28-8',
@@ -166,6 +320,24 @@ Residual Properties
 
 Below, an example is shown for calculating residual properties of THF/Water mixtures
 
+>>> from realgas.eos.virial import SecondVirialMixture
+>>> P, T = 1e5, 300.
+>>> mixture = SecondVirialMixture(compound_names=['Water', 'Tetrahydrofuran'], k_ij=0.)
+>>> import matplotlib.pyplot as plt
+>>> fig, ax = mixture.plot_residual_HSG(P, T)
+>>> fig.savefig('docs/source/THF-WATER.png')
+
+So that the results look like the following
+
+>>> from realgas.eos.virial import SecondVirialMixture
+>>> P, T = 1e5, 300.
+>>> mixture = SecondVirialMixture(compound_names=['Water', 'Tetrahydrofuran'], k_ij=0.)
+>>> import matplotlib.pyplot as plt
+>>> fig, ax = mixture.plot_residual_HSG(P, T)
+>>> fig.savefig('docs/source/THF-WATER.png')
+
+So that the results look like the following
+
 >>> from gasthermo.eos.virial import SecondVirialMixture
 >>> P, T = 1e5, 300.
 >>> mixture = SecondVirialMixture(compound_names=['Water', 'Tetrahydrofuran'], k_ij=0.)
@@ -184,7 +356,19 @@ since the pure-components may not be perfect gases.
 Partial Molar Properties
 ************************
 
->>> from gasthermo.partial_molar_properties import Mixture
+>>> from realgas.partial_molar_properties import Mixture
+>>> cp_kwargs = dict(T_min_fit=200., T_max_fit=600.)
+>>> I = Mixture(
+...     [dict(compound_name='Methane', **cp_kwargs), dict(compound_name='Ethane', **cp_kwargs)],
+...      compound_names=['Methane', 'Ethane'],
+...      ideal=False,
+...     )
+>>> I.T_cs
+[190.564, 305.32]
+>>> I.cas_numbers
+['74-82-8', '74-84-0']
+
+The reference state is the pure component at
 >>> cp_kwargs = dict(T_min_fit=200., T_max_fit=600.)
 >>> I = Mixture(
 ...     [dict(compound_name='Methane', **cp_kwargs), dict(compound_name='Ethane', **cp_kwargs)],

@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="gasthermo",
+    name="realgas",
     version="0.0.6",
     author="Robert F. De Jaco",
     author_email="dejac001@umn.edu",
@@ -12,8 +12,8 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/dejac001/GasThermo",
-    packages=['gasthermo'],
-    package_data={'gasthermo': [
+    packages=['realgas'],
+    package_data={'realgas': [
         'cp_ig.csv', 'critical_constants.csv'
     ]},
     classifiers=[
