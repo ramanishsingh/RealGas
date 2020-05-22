@@ -9,9 +9,9 @@ Determine the temperature dependence of the ideal gas heat capacity, :math:`C_\t
 >>> from gasthermo.cp import CpIdealGas
 >>> I = CpIdealGas(compound_name='Air', T_min_fit=250., T_max_fit=800., poly_order=3)
 >>> I.eval(300.), I.Cp_units
-(29.00369515161452, 'J/mol/K')
+(29.00369, 'J/mol/K')
 >>> I.eval(300.)/I.MW
-1.0015088104839267
+1.001508
 >>> # we can then plot and visualize the resutls
 >>> fig, ax = I.plot()
 >>> fig.savefig('docs/source/air.png')
@@ -64,20 +64,20 @@ Cubic Equations of State
 >>> P = 8e5  # Pa
 >>> T = 300. # K
 >>> PengRobinson(compound_name='Propane').iterate_to_solve_Z(P=P, T=T)
-0.8568255826283575
+0.85682
 >>> RedlichKwong(compound_name='Propane').iterate_to_solve_Z(P=P, T=T)
-0.8712488647564147
+0.87124
 >>> cls_srk = SoaveRedlichKwong(compound_name='Propane')
 >>> Z = cls_srk.iterate_to_solve_Z(P=P, T=T)
 >>> Z
-0.8652883337846884
+0.86528
 >>> # calculate residual properties
 >>> from chem_util.chem_constants import gas_constant as R
 >>> V = Z*R*T/P
 >>> cls_srk.S_R_R_expr(P, V, T)
--0.3002887932902908
+-0.30028
 >>> cls_srk.H_R_RT_expr(P, V, T)
--0.4271408507179967
+-0.42714
 >>> cls_srk.G_R_RT_expr(P, V, T) - cls_srk.H_R_RT_expr(P, V, T) + cls_srk.S_R_R_expr(P, V, T)
 0.0
 
@@ -87,7 +87,7 @@ Virial Equation of State
 >>> from gasthermo.eos.virial import SecondVirial
 >>> Iv2 = SecondVirial(compound_name='Propane')
 >>> Iv2.calc_Z_from_units(P=8e5, T=300.)
-0.8726051032825523
+0.87260
 
 Other Utilities
 ***************
@@ -201,11 +201,11 @@ The reference temperature is :math:`T_\text{ref}` and defaults to 0 K. But diffe
 as shown below
 
 >>> I.enthalpy(ys=[0.5, 0.5], P=1e5, T=300.)
-9037.38831833366
+9037.3883
 >>> I.enthalpy(ys=[0.5, 0.5], P=1e5, T=300., T_ref=0.)
-9037.38831833366
+9037.3883
 >>> I.enthalpy(ys=[0.5, 0.5], P=1e5, T=300., T_ref=300.)
--31.3390587754798
+-31.33905
 >>> I.ideal = True
 >>> I.enthalpy(ys=[0.5, 0.5], P=1e5, T=300., T_ref=300.)
 0.0
@@ -221,7 +221,7 @@ However, for a real gas,
 in the limit that the gas has low pressure and high temperature,
 
 >>> I.enthalpy(ys=[0.5, 0.5], P=1., T=500., T_ref=500.)
--0.00011195866675479858
+-0.000111958
 
 In the limit that the gas becomes a pure mixture,
 we recover the limit that :math:`\bar{H}_i^\text{pure}=H^\text{pure}`
@@ -249,7 +249,7 @@ calculations on multicomponent mixtures, as shown below
 ...      ideal=False,
 ...     )
 >>> M.enthalpy(ys=[0.1, 0.2, 0.5, 0.2], P=10e5, T=300.)
-7432.665935732932
+7432.66593
 >>> M.enthalpy(ys=[1.0, 0.0, 0.0, 0.0], P=10e5, T=300.) - M.bar_Hi(M.cas_numbers[0], ys=[1.0, 0.0, 0.0, 0.0], P=10e5, T=300.)
 0.0
 
