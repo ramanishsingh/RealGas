@@ -19,6 +19,7 @@ Designed for integration with computational simulation environments.
 
    gettingstarted
    definitions
+   mixturethermo
    eos
    propertydata
    zreferences

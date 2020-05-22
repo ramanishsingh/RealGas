@@ -11,32 +11,6 @@ and :math:`M^\text{R}` is the residual value of the property.
 
 More information on residual properties can be found in standard texts :cite:`Smith2005`
 
-We **define** partial molar property :math:`\bar{M}_i` of species *i* in a mixture as
-
-.. math::
-    \bar{M}_i = \left(\frac{\partial(nM)}{\partial n_i}\right)_{P, T, n_j}
-    :label: partial_molar_property
-
-The mixture property is related to the partial molar property as
-
-.. math::
-    nM=\sum_i n_i\bar{M}_i
-
-or, in terms of gas-phase mole fractions :math:`y_i`,
-
-.. math::
-    M=\sum_i y_i\bar{M}_i
-
-The following relationships also hold
-
-.. math::
-    \bar{M}_i = \bar{M}^\text{IG} + \bar{M}^\text{R}
-    :label: residual_partial_molar
-
-.. math::
-    M^\text{R} = \sum_i y_i\bar{M}^\text{R}
-    :label: residual_molar
-
 Nomenclature
 ------------
 
@@ -54,4 +28,7 @@ V_c    :math:`V_\text{c}`        Critical volume :math:`\text{m}^3/\text{mol}`
 w      :math:`\omega`            Accentric factor
 y_i    :math:`y_i`               mole fraction of component *i*
 --     :math:`n_i`               number of moles of component *i*
+S      :math:`S`                 Molar entropy
+H      :math:`H`                 Molar enthalpy
+G      :math:`G`                 Molar Gibbs free energy
 ====  ===================        ==============================================================================

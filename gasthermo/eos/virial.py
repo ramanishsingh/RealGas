@@ -1,5 +1,10 @@
 r"""
 
+.. todo::
+    merge docs with those in :ref:`gasthermo.partial_molar_properties`.
+    There, the definitions of residual properties are displayed and here wee need only
+    write simplified forms for the specific equation of state.
+
 Theory
 ------
 
@@ -219,6 +224,7 @@ import numpy as np
 from chem_util.chem_constants import gas_constant as R
 
 from ..critical_constants import CriticalConstants
+from ..input import RealMixture
 
 
 class Virial:
@@ -483,118 +489,29 @@ class MixingRule(Virial):
         )
 
 
-class SecondVirialMixture(MixingRule):
+class SecondVirialMixture(RealMixture, MixingRule):
     r"""Second virial with mixing rule from :class:`.MixingRule`
 
     .. note::
         can only input both custom critical properties or both from DIPPR--cant have mixed at the moment
 
-    :param num_components: number of components
-    :type num_components: int
-    :param dippr_nos: dippr numbers of components
-    :type dippr_nos: typing.List[str]
-    :param compound_names: names of components
-    :type compound_names: typing.List[str]
-    :param cas_numbers: cas registry numbers
-    :type cas_numbers: typing.List[str]
-    :param MWs: molecular weights of component sin g/mol
-    :type MWs: typing.List[float]
-    :param P_cs: critical pressures of componets in Pa
-    :type P_cs: typing.List[float]
-    :param T_cs: critical temperatures of pure components in K
-    :type T_cs: typing.List[float]
-    :param V_cs: critical molar volumes of pure components in m**3/mol
-    :type V_cs: typing.List[float]
-    :param ws: accentric factors of components
-    :type ws: typing.List[float]
-    :param k_ij: equation of state mixing rule in calculation of critical temperautre, see Equation :eq:`Tc_combine`. When :math:`i=j` and for chemical similar species, :math:`k_{ij}=0`. Otherwise, it is a small (usually) positive number evaluated from minimal :math:`PVT` data or, in the absence of data, set equal to zero.
-    :type k_ij: typing.List[typing.List[float]]
+    :param pow: function to calculate power, defaults to numpy.power
+    :param exp: function to calculate exponential,d efaults to numpy.exp
+    :param kwargs: key-word arguments to pass to :class:`.RealMixture`
 
     """
 
-    def __init__(self, num_components=0,
-                 dippr_nos: typing.List[str] = None,
-                 compound_names: typing.List[str] = None,
-                 cas_numbers: typing.List[str] = None,
-                 MWs: typing.List[float] = None,
-                 P_cs: typing.List[float] = None,
-                 V_cs: typing.List[float] = None,
-                 Z_cs: typing.List[float] = None,
-                 T_cs: typing.List[float] = None,
-                 ws: typing.List[float] = None,
-                 k_ij: typing.Union[float, typing.List[float]] = None,
-                 pow: callable = np.power, exp: callable = np.exp):
+    def __init__(self,
+                 pow: callable = np.power, exp: callable = np.exp,
+                 **kwargs):
         MixingRule.__init__(self, pow, exp)
-        self.num_components = num_components
-        if dippr_nos is not None:
-            self.num_components = len(dippr_nos)
-        if compound_names is not None:
-            self.num_components = len(compound_names)
-        if cas_numbers is not None:
-            self.num_components = len(compound_names)
-        if dippr_nos is None and compound_names is None and cas_numbers is None:
-            assert MWs is not None and P_cs is not None, 'Incorrect input'
-        if self.num_components == 0:
-            self.num_components = len(MWs)
-
-        assert self.num_components > 0, 'Inconsistent input--no components found!'
-        if dippr_nos is None:
-            dippr_nos = [None for i in range(self.num_components)]
-        if compound_names is None:
-            compound_names = [None for i in range(self.num_components)]
-        if cas_numbers is None:
-            cas_numbers = [None for i in range(self.num_components)]
-        if MWs is None:
-            MWs = [None for i in range(self.num_components)]
-        if P_cs is None:
-            P_cs = [None for i in range(self.num_components)]
-        if V_cs is None:
-            V_cs = [None for i in range(self.num_components)]
-        if T_cs is None:
-            T_cs = [None for i in range(self.num_components)]
-        if Z_cs is None:
-            Z_cs = [None for i in range(self.num_components)]
-        if ws is None:
-            ws = [None for i in range(self.num_components)]
-
-        self.critical_constants = []
-        for i in range(self.num_components):
-            self.critical_constants.append(
-                CriticalConstants(
-                    dippr_no=dippr_nos[i],
-                    compound_name=compound_names[i],
-                    cas_number=cas_numbers[i],
-                    MW=MWs[i],
-                    P_c=P_cs[i],
-                    V_c=V_cs[i],
-                    Z_c=Z_cs[i],
-                    T_c=T_cs[i],
-                    w=ws[i]
-                )
-            )
-
-        if k_ij is None:
-            self.k_ij = [[0. for i in range(self.num_components)] for j in range(self.num_components)]
-        if isinstance(k_ij, float) and self.num_components == 2:
-            self.k_ij = [[0. for i in range(self.num_components)] for j in range(self.num_components)]
-            for i in range(self.num_components):
-                for j in range(self.num_components):
-                    if i != j:
-                        self.k_ij[i][j] = k_ij
-        self.dippr_nos = [I.dippr_no for I in self.critical_constants]
-        self.compound_names = [I.compound_name for I in self.critical_constants]
-        self.cas_numbers = [I.cas_number for I in self.critical_constants]
-        self.ws = [I.w for I in self.critical_constants]
-        self.T_cs = [I.T_c for I in self.critical_constants]
-        self.P_cs = [I.P_c for I in self.critical_constants]
-        self.Z_cs = [I.Z_c for I in self.critical_constants]
-        self.V_cs = [I.V_c for I in self.critical_constants]
-        if __debug__ and len(set(self.T_cs)) > 1:
-            assert len(set(self.cas_numbers)) > 1, 'Errors anticipated when cas numbers equal if other props are not'
+        RealMixture.__init__(self, **kwargs)
+        RealMixture.setup(self)
 
         for i in range(self.num_components):
-            for j in range(self.num_components):
-                assert self.k_ij[i][j] is None or abs(self.k_ij[i][j]) < 1e-8, 'K[i][i] must be zero!'
+            I = CriticalConstants(**self.get_point_input(i))
+            self.set_point_input(i, **I.__dict__)
+        self.check_params()
 
     def get_w_Tc_Pc(self, i: int, j=None):
         """Returns critical constants for calculation based off of whetner i = j or not
