@@ -1,6 +1,8 @@
 Virial Equation of State
 ========================
 
+.. automodule:: src.gasthermo.eos.virial
+
 .. autoclass:: src.gasthermo.eos.virial.Virial
     :members:
 

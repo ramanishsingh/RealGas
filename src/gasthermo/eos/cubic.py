@@ -1,3 +1,14 @@
+"""
+
+Cubic Equations of State
+------------------------
+Calculates compressibility factors and residual properties (:math:`H^\text{R}/R/T`,
+:math:`S^\text{R}/R/T`, and :math:`G^\text{R}/R/T`)
+
+"""
+
+
+
 from ..critical_constants import CriticalConstants
 from chem_util.math import percent_difference
 import matplotlib.pyplot as plt
@@ -155,19 +166,6 @@ class Cubic(CriticalConstants):
         Z = self.Z_expr(P, V, T)
         return log(Z - self.beta_expr(T, P)) + self.d_ln_alpha_d_ln_Tr(T/self.T_c)*self.q_expr(T)*self.I_expr(P, V, T, log=log)
 
-    def H_expr(self, P, V, T, T_ref, val_ref=0., log=None):
-        """Expression for fluid enthalpy
-
-        :param P: pressure in Pa
-        :param V: molar volume [m**3/mol]
-        :param T: temperautre in K
-        :param T_ref: reference temperature in K
-        :param val_ref: value at reference temperature [J/mol/K]
-        :param log: function used for logarithm
-        :return: :math:`H` [J/mol/K]
-        """
-        return val_ref + self.cp_ig_integral(T_ref, T) + self.R*T*self.H_R_RT_expr(P, V, T, log=log)
-
     """Solving equations"""
     def coefficients(self, T, P):
         """Polynomial oefficients for cubic equation of state
@@ -227,7 +225,7 @@ class Cubic(CriticalConstants):
 
     def print_roots(self, T, P):
         """Check to see if all conditions have one root"""
-        print('%s %s at T %5.1f K, P %4.2f MPa has %i roots' % (self.compound_name, self.__class__, T, P*1e-6, self.num_roots(T, P)))
+        print('%s with %s EOS at T %5.1f K, P %4.2f MPa has %i roots' % (self.compound_name, self.name, T, P*1e-6, self.num_roots(T, P)))
 
     def Z_vapor_RHS(self, Z, beta, q):
         """
@@ -263,7 +261,7 @@ class Cubic(CriticalConstants):
         Z = self.Z_expr(P, V, T)
         return Z - self.Z_vapor_RHS(Z, self.beta_expr(T, P), self.q_expr(T))
 
-    def iterate_to_solve_Z(self, T, P, phase) -> float:
+    def iterate_to_solve_Z(self, T, P, phase='vapor') -> float:
         """
 
         :param T: temperature in K
@@ -330,6 +328,7 @@ class RedlichKwong(Cubic):
 
     def __init__(self, **kwargs):
         Cubic.__init__(self, sigma=1, epsilon=0, Omega=0.08664, Psi=0.42748, **kwargs)
+        self.name = 'RK'
 
     def alpha_expr(self, T_r):
         return 1/T_r**0.5
@@ -348,6 +347,7 @@ class SoaveRedlichKwong(RedlichKwong):
 
     def __init__(self, **kwargs):
         RedlichKwong.__init__(self, **kwargs)
+        self.name = 'S' + self.name
         self.f_w = 0.480 + 1.574*self.w - 0.176*self.w*self.w
 
     def alpha_expr(self, T_r):
@@ -371,4 +371,5 @@ class PengRobinson(RedlichKwong):
 
     def __init__(self, **kwargs):
         Cubic.__init__(self, sigma=1 + np.sqrt(2), epsilon=1 - np.sqrt(2), Omega=0.07780, Psi=0.45724, **kwargs)
+        self.name = 'PR'
         self.f_w = 0.37464 + 1.54226*self.w - 0.26992*self.w*self.w

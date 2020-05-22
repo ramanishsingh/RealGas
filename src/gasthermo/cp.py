@@ -128,7 +128,7 @@ class CpIdealGas:
                             'and/or increasing the number of fitting points and polynomial degree')
 
     def eval(self, T, f_sinh=np.sinh, f_cosh=np.cosh):
-        """
+        """Evaluate heat capacity
 
         :param T: temperature in K
         :param f_sinh: function for hyperbolic sine, defaults to :code:`np.sinh`
@@ -157,7 +157,7 @@ class CpIdealGas:
         return fig, ax
 
     def cp_integral(self, T_a, T_b):
-        r"""
+        r"""Evaluate integral
 
         .. math::
             \int_{T_a}^{T_b}C_{\mathrm{p}}^{\mathrm{IG}}(T^\prime) \mathrm{d}T^\prime
@@ -268,9 +268,11 @@ class CpStar(CpIdealGas):
 
 
 class CpRawData:
-    """From raw data for Cp(T)
-    * fit to polynomial of temperature
-    * fit polynomial to antiderivative
+    """Obtain heat capacity relationships from raw data
+
+    Using input raw data
+    # fit to polynomial of temperature
+    # fit polynomial to antiderivative
 
 
     :param T_min_fit: minimum temperature for fitting function [K]

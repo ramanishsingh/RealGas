@@ -6,7 +6,7 @@
       <excludeFolder url="file://$MODULE_DIR$/venv-docs" />
       <excludeFolder url="file://$MODULE_DIR$/venv-tests" />
     </content>
-    <orderEntry type="jdk" jdkName="GasThermo-main" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="GasThermo-tests" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>

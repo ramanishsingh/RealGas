@@ -6,7 +6,7 @@ Designed for integration with computational simulation environments.
 
 <p align="center"> 
     <img 
-        src="THF-WATER.png" 
+        src="docs/source/THF-WATER.png" 
         width="300"
     />
 </p>
