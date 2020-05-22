@@ -46,6 +46,6 @@ def test_cubic():
     P = 1e5
     for i in compounds_to_test:
         I = PengRobinson(compound_name=i)
-        Z = I.iterate_to_solve_Z(T, P, 'vapor')
+        Z = I.iterate_to_solve_Z(T, P)
         V = Z*I.R*T/P
         assert np.isclose(I.G_R_RT_expr(P, V, T), I.H_R_RT_expr(P, V, T)-I.S_R_R_expr(P, V, T)), 'compound not thermodynamically consistend residual properties {}'.format(i)

@@ -38,21 +38,21 @@ Cubic
 >>> T = 300. # K
 >>> cls = PengRobinson(compound_name='Propane')
 >>> cls.iterate_to_solve_Z(P=P, T=T)
-0.8803217148747003
+0.8568255826283575
 >>> cls = RedlichKwong(compound_name='Propane')
 >>> cls.iterate_to_solve_Z(P=P, T=T)
-0.8896324535506871
+0.8712488647564147
 >>> cls = SoaveRedlichKwong(compound_name='Propane')
 >>> Z = cls.iterate_to_solve_Z(P=P, T=T)
 >>> Z
-0.8852911867637512
+0.8652883337846884
 >>> # calculate residual properties
 >>> from chem_util.chem_constants import gas_constant as R
 >>> V = Z*R*T/P
 >>> cls.S_R_R_expr(P, V, T)
--0.2739464327960456
+-0.3002887932902908
 >>> cls.H_R_RT_expr(P, V, T)
--0.4006043220021135
+-0.4271408507179967
 >>> cls.G_R_RT_expr(P, V, T) - cls.H_R_RT_expr(P, V, T) + cls.S_R_R_expr(P, V, T)
 0.0
 
@@ -112,3 +112,7 @@ Gotchas
 
 import os
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+import logging
+mpl_logger = logging.getLogger('matplotlib')
+mpl_logger.setLevel(logging.WARNING)
+

@@ -447,7 +447,7 @@ class SoaveRedlichKwong(RedlichKwong):
     >>> from src.gasthermo.eos.cubic import SoaveRedlichKwong
     >>> model = SoaveRedlichKwong(compound_name='Water')
     >>> model.Omega
-    0.08644
+    0.08664
     >>> model.sigma
     1
     >>> model.epsilon
@@ -455,7 +455,7 @@ class SoaveRedlichKwong(RedlichKwong):
     >>> model.Psi
     0.42748
     >>> model.f_w_rule(0.)
-    0.480
+    0.48
     >>> model.f_w_rule(1.)
     1.878
 
@@ -511,7 +511,7 @@ class PengRobinson(SoaveRedlichKwong):
     >>> from src.gasthermo.eos.cubic import PengRobinson
     >>> model = PengRobinson(compound_name='Water')
     >>> model.Omega
-    0.07780
+    0.0778
     >>> model.sigma
     2.4142135
     >>> model.epsilon

@@ -579,13 +579,12 @@ class SecondVirialMixture(MixingRule):
 
         if k_ij is None:
             self.k_ij = [[0. for i in range(self.num_components)] for j in range(self.num_components)]
-        if isinstance(self.k_ij, float) and self.num_components == 2:
-            value = self.k_ij
+        if isinstance(k_ij, float) and self.num_components == 2:
             self.k_ij = [[0. for i in range(self.num_components)] for j in range(self.num_components)]
             for i in range(self.num_components):
                 for j in range(self.num_components):
                     if i != j:
-                        self.k_ij[i][j] = value
+                        self.k_ij[i][j] = k_ij
         self.dippr_nos = [I.dippr_no for I in self.critical_constants]
         self.compound_names = [I.compound_name for I in self.critical_constants]
         self.cas_numbers = [I.cas_number for I in self.critical_constants]

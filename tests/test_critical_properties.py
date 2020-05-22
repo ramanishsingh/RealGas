@@ -35,7 +35,7 @@ def test_input_custom():
     J = PengRobinson(**kwargs)
     K = SecondVirial(**kwargs)
     T, P = 300., 10e5
-    assert percent_difference(J.iterate_to_solve_Z(T, P, 'vapor'), K.calc_Z_from_units(P, T)) < 0.1, "compressibility factors from second virial and PR differ by > 0.1 %%"
+    assert percent_difference(J.iterate_to_solve_Z(T, P), K.calc_Z_from_units(P, T)) < 0.1, "compressibility factors from second virial and PR differ by > 0.1 %%"
 
 
 def test_input_binaryvirial():
