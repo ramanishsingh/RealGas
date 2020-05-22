@@ -1,7 +1,7 @@
 r"""
 
 .. todo::
-    merge docs with those in :ref:`gasthermo.partial_molar_properties`.
+    merge docs with those in :code:`gasthermo.partial_molar_properties`.
     There, the definitions of residual properties are displayed and here wee need only
     write simplified forms for the specific equation of state.
 
@@ -671,6 +671,17 @@ class SecondVirialMixture(RealMixture, MixingRule):
             for i in range(self.num_components) for j in range(self.num_components)
         )
         )
+
+    def bar_HiR_star(self, T_star, cas_k: str, ys: typing.List[typing.Union[float, typing.Any]], P, T):
+        r""" Returns the scaled entropy useful for computations :math:`\bar{H}_i^{\text{R},\star}`,
+        as defined in Equation :eq:`barHiRstar_definition`
+
+        :param cas_k: cas number of component *k*
+        :param ys: mole fractions
+        :param P: pressure in Pa
+        :param T: temperature in K
+        """
+        return T_star * self.bar_HiR_RT(cas_k, ys, P, T)
 
     def bar_SiR_R(self, cas_k: str, ys: typing.List[typing.Union[float, typing.Any]], P, T):
         r"""Dimensionless residual partial molar entropy of component :math:`i`

@@ -50,7 +50,6 @@ The partial molar enthalpy of an ideal gas, :math:`\bar{H}_i^\text{IG}`, is
 
 .. math::
     \bar{H}_i^\text{IG} = H_i^\text{IG}
-    :label: barHiIG
 
 which results from the enthalpy of an ideal gas being independent of pressure.
 Therefore, we can compute the ideal gas partial molar enthalpy if we have
@@ -58,6 +57,7 @@ the ideal gas heat capacities, as follows
 
 .. math::
     \bar{H}_i^\text{IG} = H_i^\text{IG} = \int_{T_\text{ref}}^T C_{\text{p},i}^\text{IG}\mathrm{d}T^\prime
+    :label: barHiIG
 
 where :math:`T_\text{ref}` is a reference temperature and :math:`T^\prime` is a dummy variable for integration.
 Often times, we want to compute these quantities in dimensionless units,
@@ -66,8 +66,14 @@ Often times, we want to compute these quantities in dimensionless units,
     \begin{align}
         \bar{H}_i^{\text{IG},\star} &= \frac{\bar{H}_i^\text{IG}}{RT_\text{ref}} \\
                                     &= \int_{1}^{T^\star} \frac{C_{\text{p},i}^\text{IG}}{R}\mathrm{d}T^\prime \\
-                                    &= \int_{1}^{T^\star} C_{\text{p},i}^{\text{IG},\star}\mathrm{d}T^\prime
+                                    &=
     \end{align}
+
+or
+
+.. math::
+    \bar{H}_i^{\text{IG},\star} = \int_{1}^{T^\star} C_{\text{p},i}^{\text{IG},\star}\mathrm{d}T^\prime
+    :label: barHiIGstar
 
 where
 
@@ -149,28 +155,122 @@ In this package, the second-order virial equation of state currently implements 
 from gasthermo.eos.virial import SecondVirialMixture
 import gasthermo.input as inp
 from gasthermo.cp import CpIdealGas, CpStar
+from chem_util.chem_constants import gas_constant as R
+from gasthermo.input import IdealMixture
 import numpy as np
 import typing
 
 
-class IdealMixture(inp.IdealMixture):
-    def __init__(self, **kwargs):
-        inp.IdealMixture.__init__(self, **kwargs)
-
-
 class Mixture(SecondVirialMixture):
-    r"""Mixture
-
-    .. note::
-        can only input both custom critical properties or both from DIPPR--cant have mixed at the moment
-
-    :param ideal_gas: whether or not the gas is ideal, defaults to True
-    :type ideal_gas: bool, optional
-    :param kwargs: key-word arguments for instantiation of :class:`gasthermo.eos.virial.SecondVirialMixture`
-
+    """
+    :param ideal: whether or not ideal gas, defaults to True
+    :type ideal: bool, optional
+    :param kwargs: key-word arguments for :class:`gasthermo.eos.virial.SecondVirialMixture`
     """
 
-    def __init__(self, ideal_gas=True, **kwargs):
-        self.ideal_gas = ideal_gas
-        SecondVirialMixture.__init__(self, **kwargs)
+    def __init__(self, cp_args: typing.List[dict], ideal=True, **kwargs):
+        self.ideal = ideal
+        self.data = [
+            CpIdealGas(**i) for i in cp_args
+        ]
+        self.cas_numbers = [I.cas_number for I in self.data]
+        if not self.ideal:
+            SecondVirialMixture.__init__(self, **kwargs)
 
+    def bar_Hi_IG(self, cas_i: str, T, T_ref=0):
+        """
+
+        :param T_ref: reference temperature in K for enthalpy, defaults to 0
+        :param T: temperautre in K
+        :return: :math:`\bar{H}_i^\text{IG}`, see Equation :eq:`barHiIG`
+        """
+        assert cas_i in self.cas_numbers, 'Cas number not found!'
+        i = self.cas_numbers.index(cas_i)
+        return self.data[i].cp_integral(T_ref, T)
+
+    def bar_Vi_IG(self, T, P):
+        """
+
+        :param T: temperature in K
+        :param P: pressure in Pa
+        :return: :math:`\bar{V}_i^\text{IG}`, see Equation :eq:`barViIG`
+        """
+        return R * T / P
+
+    def bar_Hi_R(self, cas_k: str, ys: typing.List[typing.Union[float, typing.Any]], P, T):
+        assert not self.ideal, 'No residual props for ideal gas'
+        return R * T * self.bar_HiR_RT(cas_k, ys, P, T)
+
+    def bar_Vi_R(self, cas_k: str, ys: typing.List[typing.Union[float, typing.Any]], P, T):
+        assert not self.ideal, 'No residual props for ideal gas'
+        return R * T * self.bar_ViR_RT(cas_k, ys, P, T)
+
+    def bar_Hi(self, cas_k: str, ys: typing.List[typing.Union[float, typing.Any]], P, T):
+        if self.ideal:
+            return self.bar_Hi_IG(cas_k, T)
+
+        return self.bar_Hi_IG(cas_k, T) + R * T * self.bar_HiR_RT(cas_k, ys, P, T)
+
+    def bar_Vi(self, cas_k: str, ys: typing.List[typing.Union[float, typing.Any]], P, T):
+        if self.ideal:
+            return self.bar_Vi_IG(T, P)
+
+        return self.bar_Vi_IG(T, P) + R * T * self.bar_Vi_R(cas_k, ys, P, T)
+
+    def enthalpy(self, ys: typing.List[typing.Union[float, typing.Any]], P: float, T: float):
+        """Residual property of :math:`X` for mixture.
+
+        Similar to Equation :eq:`residual_molar` but in dimensionless form
+
+        :param method: function to compute partial molar property of compound
+        :type method: callable
+        """
+        return sum(
+            ys[i] * self.bar_Hi(self.cas_numbers[i], ys, P, T) for i in range(self.num_components)
+        )
+
+
+class MixtureDimensionless(SecondVirialMixture):
+    """
+    :param ideal: whether or not ideal gas, defaults to True
+    :type ideal: bool, optional
+    :param kwargs: key-word arguments for :class:`gasthermo.eos.virial.SecondVirialMixture`
+    """
+
+    def __init__(self, cp_args: typing.List[dict], ideal=True, **kwargs):
+        self.ideal = ideal
+        self.data = [
+            CpStar(**i) for i in cp_args
+        ]
+        self.cas_numbers = [I.cas_number for I in self.data]
+        if not self.ideal:
+            SecondVirialMixture.__init__(self, **kwargs)
+
+    def bar_Hi_IG_star(self, cas_i, T_star, T_ref_star=0):
+        """
+
+        :param T_ref_star: dimensionless reference temperature in K for enthalpy, defaults to 0
+        :param T_star: dimensionless temperature
+        :return: :math:`\bar{H}_i^\text{IG}`, see Equation :eq:`barHiIGstar`
+        """
+        assert cas_i in self.cas_numbers, 'Cas number not found!'
+        i = self.cas_numbers.index(cas_i)
+        return self.data[i].cp_integral(T_star, T_ref_star)
+
+    def bar_Hi_star(self, T_star, cas_k: str, ys: typing.List[typing.Union[float, typing.Any]], P, T):
+        if self.ideal:
+            return self.bar_Hi_IG_star(cas_k, T_star)
+
+        return self.bar_Hi_IG_star(cas_k, T_star) + self.bar_HiR_star(T_star, cas_k, ys, P, T)
+
+    def enthalpy_star(self, ys: typing.List[typing.Union[float, typing.Any]], P: float, T: float):
+        """Residual property of :math:`X` for mixture.
+
+        Similar to Equation :eq:`residual_molar` but in dimensionless form
+
+        :param method: function to compute partial molar property of compound
+        :type method: callable
+        """
+        return sum(
+            ys[i] * self.bar_Hi_star(self.cas_numbers[i], ys, P, T) for i in range(self.num_components)
+        )

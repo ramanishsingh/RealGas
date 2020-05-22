@@ -21,6 +21,7 @@ Designed for integration with computational simulation environments.
    definitions
    mixturethermo
    eos
+   input
    propertydata
    zreferences
 
