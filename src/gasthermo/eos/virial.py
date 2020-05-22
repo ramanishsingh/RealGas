@@ -270,7 +270,7 @@ class Virial:
         :param P_c: critical pressure [Pa]
         :return: Equation :eq:`B_expr`
         """
-        return self.R * T_c / P_c * (
+        return R * T_c / P_c * (
                 self.B0_expr(T_r) + w * self.B1_expr(T_r)
         )
 
@@ -279,7 +279,7 @@ class Virial:
 
     def hat_phi_i_expr(self, *args):
         r"""expression for fugacity coefficient
-        :returns: :math:`\exp{\ln{\hat{\phi}_i}}`
+        :returns: :math:`\exp\left({\ln{\hat{\phi}_i}}\right)`
         """
         return self.exp(self.ln_hat_phi_k_expr(*args))
 
@@ -351,7 +351,7 @@ class SecondVirial(CriticalConstants, Virial):
         :type T: float
         """
         T_r = T / self.T_c
-        return P * self.B_expr(T_r, self.w, self.T_c, self.P_c) / self.R / T
+        return P * self.B_expr(T_r, self.w, self.T_c, self.P_c) / R / T
 
     def calc_Z_from_units(self, P, T):
         """
@@ -360,7 +360,7 @@ class SecondVirial(CriticalConstants, Virial):
         :param T: temperature in K
         :return: Equation :eq:`z_virial`
         """
-        return 1. + self.B_expr(T / self.T_c, self.w, self.T_c, self.P_c) * P / self.R / T
+        return 1. + self.B_expr(T / self.T_c, self.w, self.T_c, self.P_c) * P / R / T
 
     def calc_Z_from_dimensionless(self, P_r, T_r):
         """
@@ -451,13 +451,13 @@ class MixingRule(Virial):
         """
         return pow(T_ci * T_cj, 0.5) * (1. - k_ij)
 
-    def P_cij_rule(self, Z_ci, V_ci, T_ci, Z_cj, V_cj, T_cj):
+    def P_cij_rule(self, Z_ci, V_ci, T_ci, Z_cj, V_cj, T_cj, k_ij):
         """
 
         :return: Equation :eq:`Pc_combine`
         """
         Z_cij = self.Z_cij_rule(Z_ci, Z_cj)
-        T_cij = self.T_cij_rule(T_ci, T_cj)
+        T_cij = self.T_cij_rule(T_ci, T_cj, k_ij=k_ij)
         V_cij = self.V_cij_rule(V_ci, V_cj)
         return Z_cij * R * T_cij / V_cij
 
@@ -550,10 +550,19 @@ class SecondVirialMixture(MixingRule):
             self.V_cs = [None for i in range(self.num_components)]
         if self.T_cs is None:
             self.T_cs = [None for i in range(self.num_components)]
+        if self.Z_cs is None:
+            self.Z_cs = [None for i in range(self.num_components)]
         if self.ws is None:
             self.ws = [None for i in range(self.num_components)]
         if self.k_ij is None:
-            self.k_ij = [[None for i in range(self.num_components)] for j in range(self.num_components)]
+            self.k_ij = [[0. for i in range(self.num_components)] for j in range(self.num_components)]
+        if isinstance(self.k_ij, float) and self.num_components == 2:
+            value = self.k_ij
+            self.k_ij = [[0. for i in range(self.num_components)] for j in range(self.num_components)]
+            for i in range(self.num_components):
+                for j in range(self.num_components):
+                    if i != j:
+                        self.k_ij[i][j] = value
 
         self.critical_constants = []
         for i in range(self.num_components):
@@ -582,7 +591,7 @@ class SecondVirialMixture(MixingRule):
 
         for i in range(self.num_components):
             for j in range(self.num_components):
-                assert abs(self.k_ij[i][j]) < 1e-8, 'K[i][i] must be zero!'
+                assert self.k_ij[i][j] is None or abs(self.k_ij[i][j]) < 1e-8, 'K[i][i] must be zero!'
 
     def get_w_Tc_Pc(self, i: int, j=None):
         """Returns critical constants for calculation based off of whetner i = j or not
@@ -599,6 +608,7 @@ class SecondVirialMixture(MixingRule):
             self.P_cij_rule(
                 self.Z_cs[i], self.V_cs[i], self.T_cs[i],
                 self.Z_cs[j], self.V_cs[j], self.T_cs[j],
+                k_ij=self.k_ij[i][j]
             )
         )
 
@@ -634,7 +644,7 @@ class SecondVirialMixture(MixingRule):
         :param T: temperature in K
         :return: Equation :eq:`z_virial`
         """
-        return 1. + self.B_mix_expr(y_k, T) * P / self.R / T
+        return 1. + self.B_mix_expr(y_k, T) * P / R / T
 
     def d_ik_expr(self, i: int, k: int, T):
         """
@@ -797,15 +807,15 @@ class SecondVirialMixture(MixingRule):
         )
 
     def S_R_R(self, *args):
-        """Residual entropy of mixture :math:`S^\mathrm{R}`"""
+        r"""Residual entropy of mixture :math:`S^\mathrm{R}/R`"""
         return self.M_R_dimensionless(self.bar_SiR_R, *args)
 
     def H_R_RT(self, *args):
-        """Residual enthalpy of mixture :math:`H^\mathrm{R}`"""
+        r"""Residual enthalpy of mixture :math:`H^\mathrm{R}/R/T`"""
         return self.M_R_dimensionless(self.bar_HiR_RT, *args)
 
     def G_R_RT(self, *args):
-        """Residual free energy of mixture :math:`G^\mathrm{R}`"""
+        r"""Residual free energy of mixture :math:`G^\mathrm{R}/R/T`"""
         return self.M_R_dimensionless(self.bar_GiR_RT, *args)
 
     def plot_residual_HSG(self, P, T, ax=None, fig=None) -> typing.Tuple[plt.figure, plt.subplot]:
@@ -817,12 +827,14 @@ class SecondVirialMixture(MixingRule):
         :param fig: matplotlib figure, defautls to None
         """
 
+        assert self.num_components == 2, 'Plotting only implemented for binary mixtures'
+
         if ax is None:
             if fig is None:
                 fig = plt.figure()
             ax = fig.add_subplot(111)
             ax.set_ylabel('Dimensionless')
-            ax.set_xlabel('Gas-Phase Mole fraction %s' % self.i.compound_name)
+            ax.set_xlabel('Gas-Phase Mole fraction %s' % self.compound_names[0])
 
         y_1 = np.linspace(0., 1.)
         HR_RT = np.array(list(self.H_R_RT([i, 1. - i], P, T) for i in y_1))

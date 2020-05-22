@@ -75,9 +75,9 @@ Residual Properties
 
 Below, an example is shown for calculating residual properties of THF/Water mixtures
 
->>> from src.gasthermo.eos.virial import BinarySecondVirial
+>>> from src.gasthermo.eos.virial import SecondVirialMixture
 >>> P, T = 1e5, 300.
->>> mixture = BinarySecondVirial(i_kwargs = {'compound_name': 'Water'}, j_kwargs = {'compound_name': 'Tetrahydrofuran'}, k_ij=0.)
+>>> mixture = SecondVirialMixture(compound_names=['Water', 'Tetrahydrofuran'], k_ij=0.)
 >>> import matplotlib.pyplot as plt
 >>> fig, ax = mixture.plot_residual_HSG(P, T)
 >>> fig.savefig('docs/source/THF-WATER.png')
