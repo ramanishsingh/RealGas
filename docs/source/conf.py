@@ -22,8 +22,8 @@ copyright = '2020, Robert F. De Jaco'
 author = 'Robert F. De Jaco'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.6'
-version = '0.0.6'
+release = '1.0.1'
+version = '1.0.1'
 
 # -- General configuration ---------------------------------------------------
 

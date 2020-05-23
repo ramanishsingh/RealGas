@@ -137,3 +137,4 @@ dmypy.json
 
 /venv-docs/
 error-*
+/venv-release/

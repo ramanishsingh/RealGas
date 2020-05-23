@@ -5,10 +5,10 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="realgas",
-    version="0.0.6",
+    version="1.0.1",
     author="Robert F. De Jaco",
     author_email="dejac001@umn.edu",
-    description="Gas-Phase Thermodynamics in Python",
+    description="Simple integration of real-gas effects into modeling and simulation environments",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/dejac001/GasThermo",
