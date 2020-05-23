@@ -1,5 +1,9 @@
 RealGas
 =======
+[![DOI](https://zenodo.org/badge/266229430.svg)](https://zenodo.org/badge/latestdoi/266229430)
+[![Documentation Status](https://readthedocs.org/projects/realgas/badge/?version=latest)](https://realgas.readthedocs.io/en/latest/?badge=latest)
+![Python application](https://github.com/dejac001/RealGas/workflows/Python%20application/badge.svg)
+
 Simple integration of real-gas effects into open source Chemical Engineering modeling and simulation environments.
 
 Chemical processes involving gas-phases, such as membrane separations,
