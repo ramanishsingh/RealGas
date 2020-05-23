@@ -7,29 +7,29 @@ Single Component
 Virial
 ******
 
-.. automodule:: gasthermo.eos.virial
+.. automodule:: realgas.eos.virial
 
-.. autoclass:: gasthermo.eos.virial.Virial
+.. autoclass:: realgas.eos.virial.Virial
     :members:
 
-.. autoclass:: gasthermo.eos.virial.SecondVirial
+.. autoclass:: realgas.eos.virial.SecondVirial
     :members:
 
 Cubic
 *****
 
-.. automodule:: gasthermo.eos.cubic
+.. automodule:: realgas.eos.cubic
 
-.. autoclass:: gasthermo.eos.cubic.Cubic
+.. autoclass:: realgas.eos.cubic.Cubic
     :members:
 
-.. autoclass:: gasthermo.eos.cubic.RedlichKwong
+.. autoclass:: realgas.eos.cubic.RedlichKwong
     :members:
 
-.. autoclass:: gasthermo.eos.cubic.SoaveRedlichKwong
+.. autoclass:: realgas.eos.cubic.SoaveRedlichKwong
     :members:
 
-.. autoclass:: gasthermo.eos.cubic.PengRobinson
+.. autoclass:: realgas.eos.cubic.PengRobinson
     :members:
 
 Multicomponent
@@ -38,8 +38,8 @@ Multicomponent
 Virial
 ******
 
-.. autoclass:: gasthermo.eos.virial.MixingRule
+.. autoclass:: realgas.eos.virial.MixingRule
     :members:
 
-.. autoclass:: gasthermo.eos.virial.SecondVirialMixture
+.. autoclass:: realgas.eos.virial.SecondVirialMixture
     :members:

@@ -8,8 +8,8 @@ The package can be installed via :code:`pip` as follows
 
 .. code-block:: bash
 
-    pip install GasThermo
+    pip install realgas
 
 
-.. include:: ../../gasthermo/examples.rst
+.. include:: ../../realgas/examples.rst
 

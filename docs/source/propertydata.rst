@@ -6,41 +6,41 @@ Raw data obtained from :cite:`DIPPR` and :cite:`Perry`
 Heat Capacity
 -------------
 
-.. automodule:: gasthermo.cp
+.. automodule:: realgas.cp
 
-.. autoclass:: gasthermo.cp.CpIdealGas
+.. autoclass:: realgas.cp.CpIdealGas
     :members:
 
-.. autoclass:: gasthermo.cp.CpStar
+.. autoclass:: realgas.cp.CpStar
     :members:
 
-.. autoclass:: gasthermo.cp.CpRawData
+.. autoclass:: realgas.cp.CpRawData
     :members:
 
 Critical Properties
 -------------------
 
-.. automodule:: gasthermo.critical_constants
+.. automodule:: realgas.critical_constants
    :members:
 
 Thermal Conductivity
 --------------------
 
-.. automodule:: gasthermo.thermal_conductivity
+.. automodule:: realgas.thermal_conductivity
 
-.. autoclass:: gasthermo.thermal_conductivity.ThermalConductivity
+.. autoclass:: realgas.thermal_conductivity.ThermalConductivity
     :members:
 
-.. autoclass:: gasthermo.thermal_conductivity.ThermalConductivityMixture
+.. autoclass:: realgas.thermal_conductivity.ThermalConductivityMixture
     :members:
 
 Viscosity
 ---------
 
-.. automodule:: gasthermo.viscosity
+.. automodule:: realgas.viscosity
 
-.. autoclass:: gasthermo.viscosity.Viscosity
+.. autoclass:: realgas.viscosity.Viscosity
     :members:
 
-.. autoclass:: gasthermo.viscosity.ViscosityMixture
+.. autoclass:: realgas.viscosity.ViscosityMixture
     :members:

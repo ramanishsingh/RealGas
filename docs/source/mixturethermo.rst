@@ -1,4 +1,6 @@
+Partial Molar Properties
+========================
 
-.. automodule:: gasthermo.partial_molar_properties
+.. automodule:: realgas.partial_molar_properties
     :members:
 

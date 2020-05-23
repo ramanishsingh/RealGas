@@ -1,6 +1,4 @@
 r"""
-Partial Molar Properties
-========================
 
 We **define** partial molar property :math:`\bar{M}_i` of species *i* in a mixture as
 

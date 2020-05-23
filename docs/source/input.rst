@@ -1,2 +1,2 @@
-.. automodule:: gasthermo.input
+.. automodule:: realgas.input
     :members:

@@ -34,7 +34,7 @@ And we will get something that looks like the following
 And we will get something that looks like the following
 
 >>> import matplotlib.pyplot as plt
->>> from gasthermo.cp import CpIdealGas
+>>> from realgas.cp import CpIdealGas
 >>> I = CpIdealGas(compound_name='Air', T_min_fit=250., T_max_fit=800., poly_order=3)
 >>> I.eval(300.), I.Cp_units
 (29.00369, 'J/mol/K')
@@ -82,7 +82,7 @@ This will lead to an error directory with a figure saved in it that looks like t
 Automatically tries to raise errors if fit is not good enough:
 
 
->>> from gasthermo.cp import CpIdealGas
+>>> from realgas.cp import CpIdealGas
 >>> I = CpIdealGas(compound_name='Methane')
 Traceback (most recent call last):
     ...
@@ -174,24 +174,7 @@ simple computational implementation.
 In some regimes, the cubic equation of state only has 1 real root--in this case, the compressibility
 factor can be obtained easily.
 
->>> from gasthermo.eos.cubic import PengRobinson
->>> pr = PengRobinson(compound_name='Propane')
->>> pr.num_roots(300., 5e5)
-3
->>> pr.num_roots(100., 5e5)
-1
-
-Input custom thermodynamic critical properties
-
 >>> from realgas.eos.cubic import PengRobinson
->>> dippr = PengRobinson(compound_name='Methane')
->>> custom = PengRobinson(compound_name='Methane', cas_number='72-28-8',
-...                       T_c=191.4, V_c=0.0001, Z_c=0.286, w=0.0115, MW=16.042, P_c=0.286
-simple computational implementation.
-In some regimes, the cubic equation of state only has 1 real root--in this case, the compressibility
-factor can be obtained easily.
-
->>> from gasthermo.eos.cubic import PengRobinson
 >>> pr = PengRobinson(compound_name='Propane')
 >>> pr.num_roots(300., 5e5)
 3
@@ -217,7 +200,7 @@ factor can be obtained easily.
 
 Input custom thermodynamic critical properties
 
->>> from gasthermo.eos.cubic import PengRobinson
+>>> from realgas.eos.cubic import PengRobinson
 >>> dippr = PengRobinson(compound_name='Methane')
 >>> custom = PengRobinson(compound_name='Methane', cas_number='72-28-8',
 ...                       T_c=191.4, V_c=0.0001, Z_c=0.286, w=0.0115, MW=16.042, P_c=0.286
@@ -234,7 +217,7 @@ factor can be obtained easily.
 
 Input custom thermodynamic critical properties
 
->>> from gasthermo.eos.cubic import PengRobinson
+>>> from realgas.eos.cubic import PengRobinson
 >>> dippr = PengRobinson(compound_name='Methane')
 >>> custom = PengRobinson(compound_name='Methane', cas_number='72-28-8',
 ...                       T_c=191.4, V_c=0.0001, Z_c=0.286, w=0.0115, MW=16.042, P_c=0.286
@@ -242,7 +225,7 @@ simple computational implementation.
 In some regimes, the cubic equation of state only has 1 real root--in this case, the compressibility
 factor can be obtained easily.
 
->>> from gasthermo.eos.cubic import PengRobinson
+>>> from realgas.eos.cubic import PengRobinson
 >>> pr = PengRobinson(compound_name='Propane')
 >>> pr.num_roots(300., 5e5)
 3
@@ -251,7 +234,24 @@ factor can be obtained easily.
 
 Input custom thermodynamic critical properties
 
->>> from gasthermo.eos.cubic import PengRobinson
+>>> from realgas.eos.cubic import PengRobinson
+>>> dippr = PengRobinson(compound_name='Methane')
+>>> custom = PengRobinson(compound_name='Methane', cas_number='72-28-8',
+...                       T_c=191.4, V_c=0.0001, Z_c=0.286, w=0.0115, MW=16.042, P_c=0.286
+simple computational implementation.
+In some regimes, the cubic equation of state only has 1 real root--in this case, the compressibility
+factor can be obtained easily.
+
+>>> from realgas.eos.cubic import PengRobinson
+>>> pr = PengRobinson(compound_name='Propane')
+>>> pr.num_roots(300., 5e5)
+3
+>>> pr.num_roots(100., 5e5)
+1
+
+Input custom thermodynamic critical properties
+
+>>> from realgas.eos.cubic import PengRobinson
 >>> dippr = PengRobinson(compound_name='Methane')
 >>> custom = PengRobinson(compound_name='Methane', cas_number='72-28-8',
 ...                       T_c=191.4, V_c=0.0001, Z_c=0.286, w=0.0115, MW=16.042, P_c=0.286*8.314*191.4/0.0001)
@@ -262,7 +262,7 @@ Input custom thermodynamic critical properties
 
 
 If we accidentally input the wrong custom units,
-it is likely that :class:`gasthermo.critical_constants.CriticalConstants` will catch it.
+it is likely that :class:`realgas.critical_constants.CriticalConstants` will catch it.
 
 >>> from realgas.eos.cubic import PengRobinson
 >>> PengRobinson(compound_name='Methane', cas_number='72-28-8',
@@ -272,7 +272,7 @@ it is likely that :class:`gasthermo.critical_constants.CriticalConstants` will c
 >>> PengRobinson(compound_name='Methane', cas_number='72-28-8',
 ...                       T_c=273.-191.4, V_c=0.0001, Z_c=0.286, w=0.0115, MW=16.042, P_c=0.286
 
->>> from gasthermo.eos.cubic import PengRobinson
+>>> from realgas.eos.cubic import PengRobinson
 >>> PengRobinson(compound_name='Methane', cas_number='72-28-8',
 ...                       T_c=273.-191.4, V_c=0.0001, Z_c=0.286, w=0.0115, MW=16.042, P_c=0.286*8.314*191.4/0.0001)
 Traceback (most recent call last):
@@ -338,7 +338,7 @@ So that the results look like the following
 
 So that the results look like the following
 
->>> from gasthermo.eos.virial import SecondVirialMixture
+>>> from realgas.eos.virial import SecondVirialMixture
 >>> P, T = 1e5, 300.
 >>> mixture = SecondVirialMixture(compound_names=['Water', 'Tetrahydrofuran'], k_ij=0.)
 >>> import matplotlib.pyplot as plt
@@ -369,6 +369,7 @@ Partial Molar Properties
 ['74-82-8', '74-84-0']
 
 The reference state is the pure component at
+
 >>> cp_kwargs = dict(T_min_fit=200., T_max_fit=600.)
 >>> I = Mixture(
 ...     [dict(compound_name='Methane', **cp_kwargs), dict(compound_name='Ethane', **cp_kwargs)],
