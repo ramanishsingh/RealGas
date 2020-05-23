@@ -136,3 +136,4 @@ dmypy.json
 /venv-tests/
 
 /venv-docs/
+error-*

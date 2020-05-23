@@ -2,11 +2,16 @@
 
 RealGas
 =======
+Simple integration of real-gas effects into open source Chemical Engineering modeling and simulation environments.
 
-A package for obtaining gas-phase thermodynamic properties and computing integrals.
-Designed for integration with computational simulation environments.
+Chemical processes involving gas-phases, such as membrane separations,
+adsorption separations, and heterogeneous catalysis, are ubiquitous.
+These processes are typically modeled assuming that the gas-phase
+is ideal and that component heat capacities can be approximated
+by constant effective values.
+The purpose of this software package is to allow these assumptions
+to be relaxed by automating the tediousness of a real gas formulation.
 
-.. image:: THF-WATER.png
 
 .. toctree::
    :maxdepth: 2
