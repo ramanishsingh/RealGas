@@ -5,14 +5,14 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="realgas",
-    version="1.0.1",
+    version="1.0.2",
     author="Robert F. De Jaco",
     author_email="dejac001@umn.edu",
     description="Simple integration of real-gas effects into modeling and simulation environments",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/dejac001/GasThermo",
-    packages=['realgas'],
+    packages=['realgas', 'realgas.eos'],
     package_data={'realgas': [
         'cp_ig.csv', 'critical_constants.csv'
     ]},
