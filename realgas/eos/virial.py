@@ -582,8 +582,11 @@ class SecondVirialMixture(RealMixture, MixingRule):
     def ln_hat_phi_k_expr(self, k: int, ys: typing.List[typing.Union[float, typing.Any]], P, T):
         r"""logarithm of fugacity coefficient
 
+        .. note::
+            The order of :code:`ys` corresponds to the order of components made during initialization
+
         :param k: index of component *k*
-        :param ys: mole fractions
+        :param ys: mole fractions ordered as component order
         :param P: pressure in Pa
         :param T: temperature in K
         :returns: Equation :eq:`ln_phi_i_virial`
